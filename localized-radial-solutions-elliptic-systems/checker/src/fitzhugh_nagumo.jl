@@ -1,7 +1,6 @@
-# From EllipticPDELocalizedRadialSol.jl (commit c0fda16). Port to RadiiPolynomial 0.11:
-# `opnorm(L, Inf)` of a LinearOperator is now a column-based bound (sum over
-# columns of the column maxima); the original matrix ∞-norm (maximum row sum)
-# is `opnorm(coefficients(L), Inf)`. Otherwise verbatim.
+# The FitzHugh–Nagumo system (Section 4.3): N, DN, f, Df, their norm bounds,
+# and the ψ̂ of Proposition 2.2. `opnorm(coefficients(L), Inf)` is the matrix
+# ∞-norm (maximum row sum). From EllipticPDELocalizedRadialSol.jl, commit c0fda16.
 
 struct FitzHughNagumo{T}
     d :: Int
@@ -132,7 +131,7 @@ function opnorm_Df(eq::FitzHughNagumo, w, X)
     ϵ⁻¹ = inv(eq.ϵ)
 
     return max(2norm(w₁, X), 1,
-        (eq.d-1)*(norm(w₁, X) + norm(w₅, X)) + norm(pow(ϵ⁻¹, 2) * (1 - 3w₅^2), X) + abs(ϵ⁻¹) * (abs(eq.β₂) + abs(eq.β₃)),
+        (eq.d-1)*(norm(w₁, X) + norm(w₅, X)) + norm(pow(ϵ⁻¹, 2) * (1 - 3w₂^2), X) + abs(ϵ⁻¹) * (abs(eq.β₂) + abs(eq.β₃)),
         (eq.d-1)*(norm(w₁, X) + norm(w₆, X)) + 2,
         (eq.d-1)*(norm(w₁, X) + norm(w₇, X)) + 2/pow(eq.β₄, 2))
 end

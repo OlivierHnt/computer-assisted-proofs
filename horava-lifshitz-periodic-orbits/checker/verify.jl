@@ -1,14 +1,13 @@
 # CHECKER — the proof.
 #
-# For each of the 18 cases (Bianchi type VIII and IX, N₁N₂N₃ = 10^k for
+# For one of the 18 cases (Bianchi type VIII and IX, N₁N₂N₃ = 10^k for
 # k = 1, 0, -1, …, -7), reads the frozen approximate zero x̄ of F and the
-# constants C₁, C₂, ν, R, and evaluates the conditions of statement.md with the
-# original proof code of HLPeriodicOrbits_VIII_IX.jl (checker/src/proof.jl):
-# the bounds Y, Z₁, Z₂ of Proposition B.1, the radii polynomial, and the checks
-# (ii) giving the hypotheses of Lemma 4.2, plus the reality of the zero and
-# the Bianchi type. Nothing is searched for or solved
-# here: only evaluated (the approximate inverse A = inv(mid(DF(x̄))) is
-# recomputed, as in the original; see statement.md).
+# constants C₁, C₂, ν, R, and evaluates the conditions of statement.md with
+# checker/src/proof.jl: the bounds Y, Z₁, Z₂ of Proposition B.1, the radii
+# polynomial, the checks giving the hypotheses of Lemma 4.2, the reality of
+# the zero and the Bianchi type. Nothing is searched for or solved here, only
+# evaluated (the approximate inverse A = inv(mid(DF(x̄))) is recomputed; see
+# statement.md).
 #
 # Usage (from the package root; Julia 1.13, see checker/Manifest.toml):
 #   julia --project=checker checker/verify.jl <case>     (one of the 18 cases)
@@ -25,10 +24,8 @@ include(joinpath(@__DIR__, "src", "HLCertificate.jl"))
 using .HLCertificate
 
 BLAS.set_num_threads(min(2, Sys.CPU_THREADS))
-# Interval matrix products use IntervalArithmetic 1.0's default :fast mode
-# (Rump's midpoint-radius product, rigorous); the original's entrywise products
-# (:slow) are 2-3x slower and gave the same verdicts. Integer powers stay
-# correctly rounded, as in IntervalArithmetic 0.20 (which used BigFloat).
+# interval matrix products: midpoint-radius product (rigorous);
+# integer powers: correctly rounded
 IntervalArithmetic.configure(; matmul = :fast, power = :slow)
 precision(BigFloat) == 256 || error("the proof uses the default BigFloat precision of 256 bits")
 rounding(BigFloat) == RoundNearest || error("the proof uses the default BigFloat rounding mode")
@@ -41,10 +38,9 @@ function condition(label, ok, enclosure)
     return ok
 end
 
-# every digit of both endpoints, with the decoration and the IntervalArithmetic
-# 1.0 "guaranteed" flag (false = a non-interval number entered the computation;
-# here only exact constants, such as the integer coefficients of the original
-# formulas; see statement.md)
+# print every digit of both endpoints, with the decoration and the "guaranteed"
+# flag (false = a non-interval number entered the computation; here only exact
+# constants; see statement.md)
 setdisplay(:full)
 full(x::Interval) = sprint(show, x)
 full(x) = repr(x)
@@ -92,8 +88,8 @@ pow10(k) = k ≥ 0 ? big(10)^k // 1 : 1 // big(10)^(-k)
 contains_exactly(X, q) = exact(inf(X)) ≤ q ≤ exact(sup(X))
 
 # |x̄ - †x̄|_X, with †x = (conj(a₋ₖ))ₖ for the five Fourier components and
-# conj for γ, η₁, η₂ (condition c.5): the symmetrisation of the original code
-# updates the coefficients in place, in increasing order of k, so x̄ is only
+# conj for γ, η₁, η₂ (condition c.5): the symmetrisation in proof.jl updates
+# the coefficients in place, in increasing order of k, so x̄ is only
 # approximately conjugate-symmetric.
 function asymmetry(x, ν)
     n = order(space(space(x)[1]))
@@ -128,7 +124,7 @@ for (c, type, k, tag, n, fmt) ∈ CASES
     condition(lab(0) * " inputs ($file, n = $n, $fmt)", ok0,
         "C₁ = $(full(C₁)) ∋ 1, C₂ = $(full(C₂)) ∋ 10^$k, ν = $(full(ν)), R = $R")
 
-    out = prove_case(x, C₁, C₂, ν, R)   # symmetrises x in place, as the original
+    out = prove_case(x, C₁, C₂, ν, R)   # symmetrises x in place
     Y, Z₁, Z₂, ie = out[:Y], out[:Z₁], out[:Z₂], out[:ie]
 
     # conditions c.1–c.4 — Proposition B.1 (radii polynomial)
@@ -142,8 +138,8 @@ for (c, type, k, tag, n, fmt) ∈ CASES
     # zero of F with |†x̃ - x̄| ≤ r₀ + |x̄ - †x̄|, and F has a unique zero in
     # the ball of radius sup(ie) around x̄, so r₀ + |x̄ - †x̄| ≤ sup(ie) gives
     # †x̃ = x̃.
-    # conditions c.6–c.11 — the hypotheses of Lemma 4.2 (checks 1–6 of the
-    # original code), with r₀ the error bound; c.12 — the Bianchi type
+    # conditions c.6–c.11 — the hypotheses of Lemma 4.2, with r₀ the error
+    # bound; c.12 — the Bianchi type
     if isempty_interval(ie)
         for (j, name) ∈ ((5, "x̃ is real"), (6, "γ ∈ (0, +∞)"), (7, "Σ₊ ≢ 0"), (8, "N₁ ≢ 0"), (9, "N₃ ≢ 0"),
                          (10, "N₁ has no zero on [0, 2π]"), (11, "N₃ has no zero on [0, 2π]"),

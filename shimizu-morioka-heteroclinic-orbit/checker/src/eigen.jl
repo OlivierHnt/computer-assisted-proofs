@@ -1,24 +1,18 @@
-# Validated eigenpairs (Section 2.2 of the paper, in the form of the manuscript of
-# 28 October 2026, "paper-R2").
-#
-# For each approximate eigenpair (λ̄, v̄) of M = Df(c⋆), the zero-finding problem is
+# Validated eigenpairs (Section 2.2 of the paper, in the form of the revised
+# manuscript). For each approximate eigenpair (λ̄, v̄) of M = Df(c⋆),
 #     F_eig(v, λ) = (M v − λ v, v^{(l*)} − 1)        on X = ℂ³ × ℂ (or ℝ³ × ℝ),
 # with the 1-norm ‖(v, λ)‖_X = Σ_i |v^{(i)}| + |λ| and l* the index of the
-# largest-modulus entry of v̄ (so that v̄^{(l*)} = 1 after scaling v̄). The
-# procedure is the one of the equilibrium (Section 2.1): A = inv(mid DF(x̄)),
-# Y = ‖A F(x̄)‖₁, R = 10 sup(Y), Z = ‖I − A DF(Box(x̄, R))‖₁, and Theorem 1.1
-# through `interval_of_existence(Y, Z, R)`: Z < 1 and Y/(1 − Z) ≤ R give a zero
-# within r = Y/(1 − Z) of x̄ in the 1-norm, hence each entry within r.
-# The 1-norm ball B(x̄, R) is contained in the box of (complex) intervals of
-# half-side R around x̄ in every real and imaginary part, so Z over that box is an
-# upper bound of sup_{B(x̄, R)} ‖I − A DF(x)‖₁.
+# largest-modulus entry of v̄ (scaled so that v̄^{(l*)} = 1). Same procedure as
+# the equilibrium: A = inv(mid DF(x̄)), Y = ‖A F(x̄)‖₁, R = 10 sup(Y),
+# Z = ‖I − A DF(Box(x̄, R))‖₁, Theorem 1.1 through `interval_of_existence`; the
+# radius r bounds the 1-norm, hence each entry. The 1-norm ball B(x̄, R) lies in
+# the box of half-side R around x̄ in every real and imaginary part, so Z over
+# that box bounds sup_{B(x̄, R)} ‖I − A DF(x)‖₁.
 #
-# A real eigenpair (data with zero imaginary parts, bit for bit) is validated in
-# ℝ³ × ℝ. For a complex-conjugate pair one eigenpair is validated and the other
-# is defined as its conjugate (paper-R2, Section 2.2): M being real, the
-# conjugate of a zero of F_eig is a zero of F_eig with the conjugate data and the
-# same l*. The original code validated all three eigenpairs at once on ℂ¹² with
-# the sup-norm (IntervalArithmetic's `eigen` for interval matrices).
+# A real eigenpair (zero imaginary parts, bit for bit) is validated in ℝ³ × ℝ.
+# For a complex-conjugate pair one eigenpair is validated and the other is
+# defined as its conjugate: M being real, the conjugate of a zero of F_eig is a
+# zero of F_eig with the conjugate data and the same l*.
 
 F_eig(M, v, λ, l) = [M * v - λ * v ; v[l] - one(λ)]
 

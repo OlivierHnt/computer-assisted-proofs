@@ -1,16 +1,13 @@
 # CHECKER — the proof.
 #
-# Reads the frozen inputs (the floating-point approximations of the periodic
-# orbits and of their Floquet normal forms on the Chebyshev nodes), and
-# evaluates the conditions of statement.md with the proof functions of the
-# original code (src/, ported to RadiiPolynomial 0.11 / IntervalArithmetic 1.0;
-# the header of each file lists what the port changed): the Newton–Kantorovich bounds of Theorem 2.1 for the
-# family of periodic orbits (Section 2.2) and for the Floquet normal form
+# Reads the frozen inputs (floating-point approximations of the periodic orbits
+# and of their Floquet normal forms on the Chebyshev nodes) and evaluates the
+# conditions of statement.md: the Newton–Kantorovich bounds of Theorem 2.1 for
+# the family of periodic orbits (Section 2.2) and for the Floquet normal form
 # (Appendix A), the sign and monotonicity checks of Section 2.3, and the
 # localisation of the Floquet exponents of Section 3. Nothing is searched for
-# or solved here: only evaluated. (The approximate inverses A, B are
-# recomputed from the inputs in floating point, as in the original code; see
-# statement.md.)
+# or solved here: only evaluated. The approximate inverses A, B are recomputed
+# from the inputs in floating point (see statement.md).
 #
 # Usage (from the package root):
 #   julia --project=checker checker/verify.jl
@@ -50,7 +47,7 @@ for f ∈ sort(collect(keys(hashes)))
     println("pass sha256 ", f)
 end
 
-# constants of the proof (paper, Theorem 1.1 and Sections 2–3; script/main.jl of the original code)
+# constants of the proof (Theorem 1.1 and Sections 2–3)
 
 K     = 20 # Fourier truncation order, periodic orbits
 K_lin = 20 # Fourier truncation order, Floquet normal form
@@ -97,8 +94,8 @@ condition("1b. Z₁ (Section 2.2.2) is a finite bound", finite(bpo.Z₁), "Z₁ 
 condition("1c. Z₂ (Section 2.2.3, Lemma 2.3 with R = $R) is a finite bound, the Lemma 2.3 denominators positive",
     finite(bpo.Z₂) & finite(bpo.rig_g₁) & finite(bpo.rig_g₂) & (inf(bpo.rig_g₁) > 0) & (inf(bpo.rig_g₂) > 0),
     "Z₂ ∈ $(bpo.Z₂); sup ‖(u₃ + αⱼ)⁻¹‖ ≤ 𝔠₁ ∈ $(bpo.rig_g₁), 𝔠₂ ∈ $(bpo.rig_g₂)")
-check_ie_po = !isempty_interval(bpo.ie) & (0 ≤ inf(bpo.ie)) & (sup(bpo.ie) ≤ R)
-condition("1d. Theorem 2.1 for F: the interval of existence in [0, R] is non-empty", check_ie_po,
+check_ie_po = !isempty_interval(bpo.ie) & (0 ≤ inf(bpo.ie)) & (sup(bpo.ie) ≤ R) & (inf(bpo.ie) ≤ 1e-10)
+condition("1d. Theorem 2.1 for F: the interval of existence in [0, R] is non-empty, and its left end r ≤ 1e-10", check_ie_po,
     "interval of existence $(bpo.ie); proved radius r = $(inf(bpo.r))")
 
 condition("2a. Y for G (Appendix A) is a finite bound", finite(blin.Y), "Y ∈ $(blin.Y), with ‖B‖ ∈ $(blin.opnorm_A)")
@@ -145,26 +142,24 @@ condition("3c. crossing of Q₂ on η ∈ [h₂⁻, h₂⁺] = [0.8, 0.95] (Lemm
     "Σ n ζ₁,ₙ sin(n acos η) ∈ $(fmt(hull_over(η -> derivative_enclosure(true_ζ₁, η, ν), h₂⁻, h₂⁺, 100)))")
 
 # ---- condition 4: Floquet exponents (Section 3) -----------------------------
-# prove_inside_box(C; a, b, box) returns (number of Gershgorin enclosures of the
-# spectrum of C(a) contained in the box, whether (C(η) - zI)⁻¹ is bounded for
-# all z on the boundary of the box and all η ∈ [a, b]). The checker also asks
-# that the enclosures inside the box be disjoint from the others, so that the
-# box contains at least that many eigenvalues of C(a).
+# prove_inside_box(C; a, b, at, box) returns (number of Gershgorin enclosures of
+# the spectrum of C(at) inside the box, whether (C(η) - zI)⁻¹ is bounded for all
+# z on the boundary of the box and all η ∈ [a, b]). The enclosures inside the
+# box must also be disjoint from the others, so that the box contains exactly
+# that many eigenvalues of C(at).
 
 boxes_disjoint(z, w) = isdisjoint_interval(real(z), real(w)) | isdisjoint_interval(imag(z), imag(w))
 
-# The eigenvalues are counted at η = `at` ∈ [a, b]: the paper (Section 3, step 2) uses
-# η = 0 for the interior interval [h₁⁺, h₂⁻]; for the two outer intervals, where it does
-# not say, the count is taken at the left end point as in the original code.
+# The eigenvalues are counted at η = `at` ∈ [a, b]: η = 0 for the interior interval
+# [h₁⁺, h₂⁻] (Section 3, step 2), the left end point a for the two outer intervals.
 function stability(label, interval_label, a, b, nexp, box; at = a)
     left_side, right_side, bottom_side, top_side = box
     count, contour = prove_inside_box(true_C; a = a, b = b, at = at, left_side = left_side, right_side = right_side, bottom_side = bottom_side, top_side = top_side)
     Λ = eigvals(evaluate.(true_C, Ref((at, 0))))
     Ω = complex(interval(left_side, right_side), interval(bottom_side, top_side))
     inside = [issubset_interval(λ, Ω) for λ ∈ Λ]
-    # Additional check, implicit in the paper and absent from the original code: the
-    # Gershgorin discs inside Ω must be disjoint from those outside, otherwise their
-    # union only bounds the total number of eigenvalues, not the number inside Ω.
+    # the Gershgorin discs inside Ω must be disjoint from those outside, otherwise their
+    # union only bounds the total number of eigenvalues, not the number inside Ω
     separated = true
     for i ∈ eachindex(Λ), j ∈ eachindex(Λ)
         if inside[i] && !inside[j]

@@ -1,9 +1,8 @@
-# The 10-mode Galerkin projection of the Kot–Schaffer model and its
-# period-doubling map F_pd, verbatim from kot_schaffer.jl of
-# OlivierHnt/PeriodDoublingMaps.jl (lines 1–30). Shared by checker/verify.jl
-# and search/find_candidate.jl. Every function is generic in the number type:
-# called with Float64 data (search; approximate inverse) or with
-# Interval{Float64} data (checker).
+# The 10-mode Galerkin projection of the Kot–Schaffer model (paper, Section 6)
+# and its period-doubling map F_pd (Definition 3.1). Shared by checker/verify.jl
+# and search/find_candidate.jl; every function accepts Float64 or
+# Interval{Float64} data.
+# Verbatim from OlivierHnt/PeriodDoublingMaps.jl/kot_schaffer.jl, lines 1–30.
 #
 # Unknown X = (x, v, λ, w, μ, h) ∈ ℝ^(4n+2):
 #   x = X[1:n], v = X[n+1:2n], λ = X[2n+1], w = X[2n+2:3n+1], μ = X[3n+2], h = X[3n+3:4n+2]

@@ -1,8 +1,6 @@
-# The spiderweb map f of the paper (Section 6, first written in Section 2.4,
-# eq. (fiphi)), its Jacobian Df and its second derivative D²f, evaluated in
-# interval arithmetic. The formulas are those printed in Section 6.1
-# ("Computation of the bounds"); each was rederived and checked against finite
-# differences (see the report of the revision and tests/ in the scratch work).
+# The spiderweb map f of the paper (Section 6; defined in Section 2.4), its
+# Jacobian Df and its second derivative D²f, evaluated in interval arithmetic.
+# Formulas: Section 6.1 ("Computation of the bounds") and statement.md.
 #
 # Conventions. Circles i = 1, …, n, radii r_i; l half-lines at angles
 # θ_k = 2πk/l, k = 0, …, l-1; masses m_i on circle i, m_0 at the centre; λ < 0.
@@ -17,8 +15,7 @@
 # only three kinds of non-zero entries: ∂²_{ii} f_i, ∂²_{ij} f_i = ∂²_{ji} f_i
 # and ∂²_{jj} f_i (j ≠ i); ∂²_{jl} f_i = 0 for j ≠ l both ≠ i.
 #
-# All arguments are intervals (IntervalArithmetic 1.x); no bare floating-point
-# number enters the arithmetic, so every result carries the "guaranteed" flag.
+# All arguments are intervals, so every result carries the "guaranteed" flag.
 
 module Spiderweb
 
@@ -28,8 +25,6 @@ export f_Df_D2f
 
 # ---- the pair term g and its derivatives (Section 6.1) -----------------------
 # a = r_i, b = r_j; c, c2, c3 = cos θ, cos 2θ, cos 3θ; d = (a² + b² − 2ab cos θ)^{1/2}.
-# The numerators are those printed in the paper, which agree with the symbolic
-# derivatives of g (checked with a computer algebra system).
 
 const two, three, four = interval(2), interval(3), interval(4)
 
@@ -41,7 +36,7 @@ g_b(a, b, c, c2)   = -(-four*(a^2 + b^2)*c + a*b*(interval(7) + c2)) / (two*dist
 g_aa(a, b, c, c2)  = three*(a - b*c)*(four*a^2 - b^2 - interval(8)*a*b*c + interval(5)*b^2*c2) / (two*dist(a, b, c)^7)
 g_ab(a, b, c, c2, c3) = -three*(a*(interval(8)*a^2 + interval(23)*b^2)*c
                                  - b*(interval(20)*a^2 + two*b^2 + (four*a^2 + interval(6)*b^2)*c2 - a*b*c3)) / (four*dist(a, b, c)^7)
-g_bb(a, b, c, c2, c3) = g_ab(b, a, c, c2, c3)  # d is symmetric in (a, b); the paper's third case is the second with i ↔ j
+g_bb(a, b, c, c2, c3) = g_ab(b, a, c, c2, c3)  # d is symmetric in (a, b)
 
 # ---- f, Df, D²f --------------------------------------------------------------
 

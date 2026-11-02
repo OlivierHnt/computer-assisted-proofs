@@ -1,7 +1,6 @@
-# From ShimizuMoriokaTutorial.jl/src/equilibrium.jl (Section 2.1 of the paper).
-# Steps 1, 3, 4 verbatim; Step 2 (Newton) is in search/, and validated_solve is
-# replaced by `validate`, which reads the approximate zero c_bar instead of
-# computing it and returns the bounds instead of asserting.
+# Equilibrium (Section 2.1 of the paper). `validate` takes the approximate zero
+# c_bar and returns the Y, Z bounds and the enclosure of Theorem 1.1.
+# From ShimizuMoriokaTutorial.jl/src/equilibrium.jl; Step 2 (Newton) is in search/.
 
 struct EquilibriumProblem
     f

@@ -1,11 +1,6 @@
-# SEARCH — not part of the proof.
-#
-# Finds the numerical candidate x̄ on the Chebyshev nodes by Newton
-# continuation in floating point, then writes it to data/ as intervals. (The
-# approximate inverse A is cheap and is recomputed by the checker.)
-#
-# Everything here may be replaced by any other method of producing a
-# candidate; the checker does not care how the data were obtained.
+# Producer, not part of the proof. Finds the candidate x̄ on the Chebyshev
+# nodes by Newton continuation in floating point and writes it to data/ as
+# intervals. Any other way of producing the file would do.
 #
 # Usage (from the package root; this is the `produce` command of entry.json):
 #   julia --project=search search/find_candidate.jl
@@ -66,7 +61,7 @@ for j ∈ 1:npts
     x_grid[j][3] = 0
 end
 
-# ---- node values as intervals, with the exact endpoint data -------------
+# ---- node values as thin intervals, exact data at the end nodes -----------
 
 Xi = interval(X)
 x_nodes = map(xⱼ -> Sequence(Xi, interval.(coefficients(xⱼ))), x_grid) # thin intervals
@@ -86,8 +81,8 @@ component(v, 3)[1] = interval( im) / interval(2)
 
 w[0] = inv(cbrt(interval(3)))
 
-# at Ω = 0, the periodic orbit is the figure eight (here we only impose that the solution lies in the yz-plane)
-# note: the proof of the eight-shape figure (i.e. Lemma 2.2 (iv)) is done a posteriori
+# at Ω = 0, the orbit lies in the yz-plane: u_x = v_x = 0 exactly
+# (the figure-eight shape, Lemma 2.2 (iv), is proved by the checker)
 
 coefficients(component(component(x_nodes[npts], 4), 1)) .= interval(0)
 coefficients(component(component(x_nodes[npts], 5), 1)) .= interval(0)

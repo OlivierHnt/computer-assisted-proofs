@@ -3,7 +3,7 @@ module ChebyshevContinuationCertificate
 # The four examples of Breden–Hénot, "Efficient Rigorous Continuation via
 # Chebyshev Series Expansion I" (arXiv:2609.22689), and the I/O of their frozen
 # inputs. Everything else (Chebyshev interpolation, products, norms, the radii
-# polynomial) is RadiiPolynomial. No plotting dependencies.
+# polynomial) is RadiiPolynomial.
 
 using RadiiPolynomial
 
@@ -20,10 +20,10 @@ export CubeRoot, SquareRoot, CahnHilliard, SKT,
     write_skt, read_skt
 
 # ------------------------------------------------------------------
-# Inputs: raw little-endian IEEE binary64, no header, no text round-trip.
+# Inputs: raw little-endian IEEE binary64, no header.
 #   cube_root.bin              x_j, j = 0..8                              (9 values)
 #   square_root.bin            (x_j, λ_j), j = 0..32, then (ẋ_j, λ̇_j)       (2·33 + 2·33 values)
-#   cahn_hilliard_<case>.bin   v_{j₁,j₂,k}, k fastest, then j₁, then j₂   (21·17·17 values)
+#   cahn_hilliard_<case>.bin   v_{j₁,j₂,k}, k fastest, then j₁, then j₂   ((K+1)(N₁+1)(N₂+1) values)
 #   skt_<arc>.bin              u_j (163 values each), j = 0..N, then u̇_j   (2·163·(N+1) values)
 # ------------------------------------------------------------------
 

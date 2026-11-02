@@ -1,22 +1,20 @@
 # CHECKER — the proof.
 #
-# Reads the frozen inputs (the floating-point approximate solutions produced by
-# the continuation, on the Chebyshev nodes), recomputes the approximate inverses
-# in floating point exactly as the original scripts do, encloses everything in
-# interval arithmetic, and evaluates the conditions of statement.md: the bounds
-# Y, Z₁, Z₂ of Theorem 1.1 (applied to the lifted map on ℓ¹ in the Chebyshev
-# variable, Theorem 2.11) and the radii-polynomial inequalities, for the four
-# examples of the paper. Nothing is searched for or solved here: only evaluated
-# (the approximate inverses are a matrix inversion of the frozen data; the
-# conditions hold whatever their exact value).
+# Reads the frozen inputs (approximate solutions on the Chebyshev nodes),
+# recomputes the approximate inverses in binary64, encloses everything in
+# intervals, and evaluates the conditions of statement.md: the bounds Y, Z₁, Z₂
+# of Theorem 1.1 for the lifted map (Theorem 2.11) and the radii polynomial, for
+# the four examples of the paper. Nothing is searched for here: the approximate
+# inverses are a matrix inversion of the frozen data, and the conditions hold
+# whatever their exact value.
 #
 # Usage (from the package root):
 #   julia --project=checker checker/verify.jl <example>...   one or several of
 #                        cube_root, square_root, cahn_hilliard, skt (the `cases`
 #                        of entry.json); none means all four
 # Prints each condition of the examples run, in the order of statement.md,
-# prefixed pass or fail. Exit code 0 iff every one of them holds. The four
-# results are independent (one example each); all four are the proof.
+# prefixed pass or fail. Exit code 0 iff every one of them holds. The theorem
+# needs all four examples.
 
 import Pkg
 Pkg.instantiate()
@@ -26,8 +24,7 @@ include(joinpath(@__DIR__, "src", "ChebyshevContinuationCertificate.jl"))
 using .ChebyshevContinuationCertificate
 
 BLAS.set_num_threads(min(2, Sys.CPU_THREADS))
-# the interval matrix products use IntervalArithmetic's own OpenBLAS, which defaults to
-# every CPU thread on Apple silicon; cap it like BLAS
+# the interval matrix products use IntervalArithmetic's own OpenBLAS; cap its threads like BLAS
 RadiiPolynomial.IntervalArithmetic.configure(nthreads = min(2, Sys.CPU_THREADS))
 
 verdicts = Bool[]
@@ -95,8 +92,7 @@ if "cahn_hilliard" ∈ examples
         label = "Cahn–Hilliard, $(replace(case, "_" => " "))"
         v_grid = read_cahn_hilliard(joinpath(datadir, "cahn_hilliard_$case.bin"))
         b = CahnHilliard.ch_certificate(curves, v_grid)
-        # θ̄ = (c̄, β̄) encloses the exact Coons map θ of Λ: the corner identities of Coons'
-        # construction hold and θ̄ agrees with the pointwise evaluation of θ at the nodes
+        # θ̄ = (c̄, β̄) encloses the exact Coons map θ (statement.md, condition 3.i.0)
         condition("3.$i.0 $label: θ̄ encloses Coons' map θ (corner identities, node values)", b.θ_ok,
             "corner mismatch ≤ $(repr(b.θ_mismatch)); Chebyshev order of θ̄ = $(b.N_θ); grids $(b.m_Y) (Y), $(b.m_Z) (Z₁)")
         report("3.$i", (; b..., label))
@@ -115,12 +111,9 @@ if "skt" ∈ examples
         arcs[name] = (; b..., u_grid, u̇_grid)
     end
 
-    # Connection of consecutive arcs of the same branch (statement.md, Result 4): the
-    # last node of the arc a (s = -1) and the first node of the arc b (s = 1) carry the
-    # same point and the same tangent, so F_pa(·, -1) of a and F_pa(·, 1) of b are the
-    # same map G on 𝒳_pa; u⋆_b(1) is a zero of G within r_b of that point and u⋆_a(-1)
-    # is the unique zero of G within r_a⁺ (Theorem 2.11): they coincide if r_b ≤ r_a⁺
-    # (or, symmetrically, r_a ≤ r_b⁺).
+    # Connection of consecutive arcs (statement.md, "Connection of the arcs"): same point
+    # and tangent at the junction, so F_pa(·, -1) of a and F_pa(·, 1) of b are the same
+    # map; its zeros u⋆_b(1) and u⋆_a(-1) coincide if r_b ≤ r_a⁺ (or r_a ≤ r_b⁺).
     branches = [["u_bar1a", "u_bar1b", "u_bar1c"], ["u_bar2a", "u_bar2b", "u_bar2c", "u_bar2d"],
                 ["u_bar3a", "u_bar3b", "u_bar3c", "u_bar3d"], ["u_bar4a", "u_bar4b", "u_bar4c"]]
     junctions = [(a, b) for branch ∈ branches for (a, b) ∈ zip(branch[1:end-1], branch[2:end])]

@@ -22,13 +22,11 @@ $\lambda < 0$.
 Reference: O. Hénot, C. Rousseau, *Spiderweb central configurations*,
 Qual. Theory Dyn. Syst. 18 (2019), 1135–1160, doi:10.1007/s12346-019-00330-y;
 arXiv:1810.09915. Section, theorem and lemma numbers below are those of the
-arXiv source (`article_HR_final.tex`); the journal numbering may differ. The
-statement above is the computer-assisted part of Section 6.2 ("Numerical
-experimentations with circles of equal mass"), for the range of the authors'
-script (`main.jl`: $n \in 5{:}100$, $\ell \in 18{:}200$, $m_i = 1/\ell$). The
-cases $\ell \le 9$ (all $n$), $\ell \in \{10, \dots, 18\}$ with $n$ small
-(Theorem 4.1) and $n \le 4$ (Theorem 5.1) are proved analytically in the paper
-and are not part of this package.
+arXiv version; the journal numbering may differ. The statement above is the
+computer-assisted part of Section 6.2 ("Numerical experimentations with circles
+of equal mass"). The cases $\ell \le 9$ (all $n$), $\ell \in \{10, \dots, 18\}$
+with $n$ small (Theorem 4.1) and $n \le 4$ (Theorem 5.1) are proved
+analytically in the paper and are not part of this package.
 
 ## Setting
 
@@ -41,14 +39,26 @@ and are not part of this package.
   $g(a, b, \theta) = \dfrac{a - b\cos\theta}{(a^2 + b^2 - 2ab\cos\theta)^{3/2}}$
   and $\zeta_\ell = \sum_{k=1}^{\ell-1} (1 - \cos\theta_k)^{-1/2}$. It is
   $C^\infty$ on $\{r_i > 0,\ r_i \ne r_j\} \supset \mathcal R^n$.
-- $Df$ and $D^2 f$: the explicit formulas of Section 6.1 ("Computation of the
-  bounds"), rederived for this package and checked against finite differences
-  of $f$ in 256-bit arithmetic (relative agreement $10^{-13}$, for equal and
-  for unequal masses). $f_i$ depends on $r_i$ and on the other $r_j$, so
-  $D^2 f_i$ has only the entries $\partial^2_{ii} f_i$,
-  $\partial^2_{ij} f_i = \partial^2_{ji} f_i$ and $\partial^2_{jj} f_i$
-  ($j \ne i$); they are the three cases of the paper, the third being the second
-  with $i \leftrightarrow j$. $D^2 f$ is stored as the $n \times n^2$ matrix
+- $Df$ and $D^2 f$ (Section 6.1, "Computation of the bounds"; rederived from
+  $f$ and checked against finite differences of $f$). Write $a = r_i$,
+  $b = r_j$, $c = \cos\theta$, $c_2 = \cos 2\theta$, $c_3 = \cos 3\theta$,
+  $d = (a^2 + b^2 - 2ab\,c)^{1/2}$, and
+  - $g_a = -\dfrac{4a^2 + b^2 - 8ab\,c + 3b^2 c_2}{2d^5}$,
+    $g_b = -\dfrac{-4(a^2 + b^2)c + ab(7 + c_2)}{2d^5}$,
+  - $g_{aa} = \dfrac{3(a - bc)(4a^2 - b^2 - 8ab\,c + 5b^2 c_2)}{2d^7}$,
+    $g_{ab} = -\dfrac{3\big(a(8a^2 + 23b^2)c - b(20a^2 + 2b^2 + (4a^2 + 6b^2)c_2 - ab\,c_3)\big)}{4d^7}$,
+    $g_{bb}(a, b, \theta) = g_{ab}(b, a, \theta)$.
+
+  Then, with $\sum_k$ over $k = 0, \dots, \ell - 1$ and the arguments
+  $(r_i, r_j, \theta_k)$ of the $g$'s omitted, for $j \ne i$:
+  - $\partial_i f_i = \lambda - \dfrac{m_i \zeta_\ell}{\sqrt 2\, r_i^3} - \dfrac{2m_0}{r_i^3} + \sum_{j \ne i} m_j \sum_k g_a$,
+    $\quad \partial_j f_i = m_j \sum_k g_b$;
+  - $\partial^2_{ii} f_i = \dfrac{3 m_i \zeta_\ell}{\sqrt 2\, r_i^4} + \dfrac{6 m_0}{r_i^4} + \sum_{j \ne i} m_j \sum_k g_{aa}$,
+    $\quad \partial^2_{ij} f_i = \partial^2_{ji} f_i = m_j \sum_k g_{ab}$,
+    $\quad \partial^2_{jj} f_i = m_j \sum_k g_{bb}$;
+    all other second derivatives of $f_i$ are zero.
+
+  $D^2 f$ is stored as the $n \times n^2$ matrix
   $B = (B_1 \mid \dots \mid B_n)$ of Section 6.1,
   $B[k, (i-1)n + j] = \partial^2_{ji} f_k$. Code: `f_Df_D2f` in
   `checker/src/spiderweb.jl`.
@@ -56,38 +66,25 @@ and are not part of this package.
   (maximal row sum, also for the $n \times n^2$ matrix $AB$).
 - Constants: $\lambda = -1$, $m_0 = 0$, $m_i = \mu_\ell$ (`fill(1/l, n)`),
   $\rho_* = 10^{-5}$ (`r_star`).
-- Radii polynomial. The paper's Theorem 6.1 uses
-  $p(\rho) = Z_2 \rho^2 - (1 - Z_0)\rho + Y_0$ with $Y_0 \ge \|A f(\bar x)\|$,
-  $Z_0 \ge \|I - A\,Df(\bar x)\|$ and $Z_2 \rho \ge \|A[Df(c) - Df(\bar x)]\|$
-  for all $c$ in the closed ball of radius $\rho \le \rho_*$. The checker
-  certifies the Newton–Kantorovich polynomial
-  $q(\rho) = Y_0 + (Z_0 - 1)\rho + Z_2 \rho^2/2$ instead (together with
-  $Z_0 + Z_2 \rho < 1$), with the same $Z_2$: since $Z_2$ bounds
-  $\|A\,D^2 f\|$ on the whole ball, Taylor's formula with integral remainder
-  gives $\|A(f(x) - f(\bar x) - Df(\bar x)(x - \bar x))\| \le Z_2 \rho^2/2$,
-  while the mean-value bound of Theorem 6.1 still gives the contraction constant
-  $Z_0 + Z_2\rho$. As $p = q + Z_2\rho^2/2 \ge q$, the paper's condition
-  $p(\rho_0) < 0$ is a valid but coarser sufficient condition.
+- Bounds (Theorem 6.1, Section 6.1): $Y_0 \ge \|A f(\bar x)\|$,
+  $Z_0 \ge \|I - A\,Df(\bar x)\|$ and
+  $Z_2 \rho \ge \|A[Df(c) - Df(\bar x)]\|$ for all $c$ in the closed ball of
+  radius $\rho \le \rho_*$ around $\bar x$, where $A$ is any $n \times n$
+  matrix.
 - $Z_2$ bound (Lemma 6.3): $Z_2 = \sup_{b \in \bar B_{\rho_*}(\bar x)} \|A\,B(b)\|_\infty$.
-  Derivation used here: $Df(c) - Df(\bar x) = \int_0^1 D^2 f(\bar x + t(c - \bar x))[c - \bar x]\,dt$,
+  Indeed $Df(c) - Df(\bar x) = \int_0^1 D^2 f(\bar x + t(c - \bar x))[c - \bar x]\,dt$,
   so $|(A[Df(c) - Df(\bar x)])_{aj}| \le \rho \sum_i \sup_b |\sum_k A_{ak}\,\partial^2_{ji} f_k(b)|$
   and the row sums give the lemma. The checker evaluates $A B(\bar B)$ with
   $\bar B$ the interval box, which encloses $\sup_b$.
-- Arithmetic: IEEE binary64 interval arithmetic with outward rounding,
-  IntervalArithmetic.jl 1.0.12 (pinned by RadiiPolynomial.jl 0.11.13;
-  correctly rounded `+ - * / sqrt` and integer powers; `cos` via CRlibm;
-  interval matrix products with the library default, Rump's midpoint–radius
-  product `matmul = :fast`). Every operand is an interval, so the results
-  carry the library's "guaranteed" flag, which the checker requires. The
-  radii polynomial is handled by `RadiiPolynomial.interval_of_existence`.
-  Julia 1.13.
+- Arithmetic: outward-rounded binary64 intervals (RadiiPolynomial.jl on IntervalArithmetic.jl, versions pinned in `checker/Manifest.toml`); every operand is an
+  interval, so every result carries the library's guarantee flag, which the
+  checker requires.
 
 ## Inputs (in `data/`)
 
 - Frozen: `radii.bin`, the numerical zeros $\bar x(n, \ell)$ of $f$, for
-  $\ell = 18, \dots, 200$ and $n = 5, \dots, 100$ (17 568 cases). Producing
-  them takes the authors' Newton continuation in $n$ and $\ell$
-  (`proof_𝑛ℓ` of the original code), replayed by
+  $\ell = 18, \dots, 200$ and $n = 5, \dots, 100$ (17 568 cases). They come
+  from a Newton continuation in $n$ and $\ell$,
   `julia --project=search search/produce.jl` (the `produce` command of
   `entry.json`), which is not part of the proof: any other data passing the
   conditions below would prove the theorem as well.
@@ -109,12 +106,19 @@ in `data/hashes.json`; the checker verifies it before reading the file.
 
 ## Conditions to verify
 
-The checker takes one case: `julia --project=checker checker/verify.jl <n> <l>`
+Each is a finite computation in interval arithmetic on the inputs above. The
+checker takes one case: `julia --project=checker checker/verify.jl <n> <l>`
 with the parameters $n \in \{5, \dots, 100\}$ (circles) and
 $\ell \in \{18, \dots, 200\}$ (half-lines), declared in `entry.json` as
-`"cases": {"n": "5:100", "l": "18:200"}`. For the case $(n, \ell)$ it
-evaluates in interval arithmetic (`check_case` in `checker/src/radii_check.jl`),
-with $\bar x = \bar x(n,\ell)$, $A$ and $\bar B$ as above, the enclosures
+`"cases": {"n": "5:100", "l": "18:200"}`; the conditions below are those of a
+generic case, and the theorem is their conjunction over all
+$96 \times 183 = 17\,568$ cases. An automated check runs one case only:
+`test_case` of `entry.json`, or $(n, \ell) = (5, 18)$, the first declared
+values, when there is none.
+
+For the case $(n, \ell)$ the checker evaluates (`check_case` in
+`checker/src/radii_check.jl`), with $\bar x = \bar x(n,\ell)$, $A$ and
+$\bar B$ as above, the enclosures
 
 - $Y_0 \ni \|A\, f(\bar x)\|_\infty$,
 - $Z_0 \ni \|I - A\, Df(\bar x)\|_\infty$,
@@ -129,7 +133,7 @@ prints their suprema, and checks two conditions, labelled
    with $f \in C^1(U)$; here $U = \mathcal R^n$, and the zero inherits the
    ordering $0 < \tilde r_1 < \dots < \tilde r_n$.) The printed number is
    $\min(\inf \bar B_1, \min_i (\inf \bar B_{i+1} - \sup \bar B_i))$.
-2. **Radii polynomial (Theorem 6.1, Newton–Kantorovich form).**
+2. **Radii polynomial (Theorem 6.1).**
    `interval_of_existence(sup Y₀, sup Z₀, sup Z₂, ρ*)` succeeds and returns
    a guaranteed interval $I = [\rho_1, \rho_2] \subset [0, \rho_*]$ on which
    $q(\rho) = Y_0 + (Z_0 - 1)\rho + Z_2 \rho^2/2 \le 0$ and $Z_0 + Z_2 \rho < 1$
@@ -137,40 +141,28 @@ prints their suprema, and checks two conditions, labelled
    rounded down). Success also entails $Y_0 \ge 0$, $0 \le Z_0 < 1$ and
    $0 \le Z_2 < \infty$ (the library rejects unbounded or negative bounds, and
    the empty interval), and $\rho_1 > 0$ when $Y_0 > 0$. The printed enclosure
-   is $I$.
+   is $I$. The paper's Theorem 6.1 uses
+   $p(\rho) = Z_2 \rho^2 - (1 - Z_0)\rho + Y_0$, without the factor $1/2$;
+   since $Z_2$ bounds $\|A\,D^2 f\|$ on the whole ball, Taylor's formula with
+   integral remainder gives the sharper $q$, and $p = q + Z_2\rho^2/2 \ge q$,
+   so $p(\rho) < 0$ implies the condition used here.
 
-All conditions hold for every case $\Rightarrow$ Theorem. The theorem is the
-conjunction of the $96 \times 183 = 17\,568$ statements "f has a unique
-zero in $\bar B_\rho(\bar x(n,\ell))$ for $\rho \in I(n,\ell)$", one per
-case, and the proof is complete iff every run of the checker exits 0. For one
-case, let $\rho \in I$ and $T(x) = x - A f(x)$: for $x, y$ in the closed ball of radius $\rho$,
+All conditions hold for every case $\Rightarrow$ Theorem. For one case, let
+$\rho \in I$ and $T(x) = x - A f(x)$: for $x, y$ in the closed ball of radius
+$\rho$,
 $\|T(x) - T(y)\| \le \sup_c \|I - A\,Df(c)\|\,\|x - y\| \le (Z_0 + Z_2\rho)\|x - y\|$
 with $Z_0 + Z_2 \rho < 1$ (mean value bound, Lemma 6.3); and
 $\|T(x) - \bar x\| \le \|A f(\bar x)\| + \|(I - A\,Df(\bar x))(x - \bar x)\| + \|A(f(x) - f(\bar x) - Df(\bar x)(x - \bar x))\| \le Y_0 + Z_0\rho + Z_2\rho^2/2 = q(\rho) + \rho \le \rho$
 (Taylor remainder, same $Z_2$). Banach's fixed point theorem gives a unique
 fixed point $\tilde r$ in the ball; $Z_0 < 1$ makes $A\,Df(\bar x)$, hence $A$,
-invertible, so $f(\tilde r) = 0$. This is the conclusion of Theorem 6.1 under
-a weaker hypothesis ($q(\rho) \le 0$ and $Z_0 + Z_2\rho < 1$ instead of
-$p(\rho) < 0$). Condition 1 places the zero in $\mathcal R^n$.
+invertible, so $f(\tilde r) = 0$. Condition 1 places the zero in
+$\mathcal R^n$. The theorem is proved once `checker/verify.jl <n> <l>` has
+exited 0 for every $(n, \ell)$ of `cases`. Cases run with this checker, all
+passing: $n \in 5{:}20$ with every $\ell$, and $n \in 21{:}100$ with
+$\ell \in \{18, 109, 200\}$ (3 168 cases).
 
-**Corrections to the 2019 code (this package).** The checker no longer
-reproduces `spiderweb.radii` of the original code: (i) the diagonal entries
-$\partial^2_{ii} f_i$ of the 2019 `iF_iDF_iDDF` were assigned (`=`) instead of
-accumulated (`+=`) inside a loop, which dropped the terms of the inner circles
-$j < i$ (relative error up to $7.8$ on those entries at $(n,\ell) = (5,18)$,
-checked against finite differences); (ii) the mixed derivatives
-$\partial^2_{ik} f_k$ were filled from $\partial^2_{kk} f_i$, by an identity
-exact only for equal masses, and are now computed from their own formula, so
-`f_Df_D2f` is correct for any masses; (iii) the floating-point root test on
-$p$ (`Polynomials.roots`, smallest root $\le \rho_*$) is replaced by the
-certified `interval_of_existence` on the Newton–Kantorovich polynomial $q$. With the published $D^2 f$ the printed
-$Z_2$ was not a proven bound of Lemma 6.3; with the corrected one it is, and
-all cases run here still pass (the suprema of $Z_2$ change by a few per cent
-at most; see README.md).
-
-**Caveat (unchanged).** The full range of 17 568 cases (about 8 h of
-computation on one core, see README.md) has not been run in this packaging. The runs recorded in README.md cover
-$n \in 5{:}20$, $\ell \in 18{:}200$ and $n \in 21{:}100$,
-$\ell \in \{18, 109, 200\}$ (3 168 cases) and all pass. The theorem as stated
-follows from the conditions only once `checker/verify.jl <n> <l>` has exited 0
-for every $(n, \ell)$ of `cases`.
+**Notes on the paper.** The $Z_2$ and $Y_0$ values printed in Section 6 were
+computed with code in which the diagonal entries $\partial^2_{ii} f_i$ of $D^2 f$
+kept only the term of the last circle $j$ and the norm of an interval vector
+could miss its largest entry; condition 2 uses the complete $D^2 f$ (formulas
+above) and the exact norm.

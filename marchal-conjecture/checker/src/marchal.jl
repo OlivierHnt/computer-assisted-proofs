@@ -1,13 +1,13 @@
-# The map F(x, Ω) of Section 3 and its derivative, acting directly on the
-# symmetric spaces of `marchal_space`. The unknown is x = (a, β, α, u, v, w).
+# The map F(x, Ω) of Section 3 and its derivative, acting on the symmetric
+# spaces of `marchal_space`. The unknown is x = (a, β, α, u, v, w).
 #
 # The shifts by 2ζ and 4ζ, ζ = 2π/3, are 2/3 and 4/3 of the period: as rational
 # numbers of periods they are exact roots of unity, so no π enters F or DF.
 #
-# Every product, shift and derivative is carried out on the symmetric
+# Products, shifts and derivatives are computed on the symmetric
 # representation; `project!` onto a component of F then restricts the result
-# to the symmetry of that component (it averages over orbits, which is the
-# identity on sequences that already carry the symmetry).
+# to the symmetry of that component (the identity on sequences that already
+# have it).
 
 const 𝒮  = Shift(2//3) # u ↦ u(⋅ + 2ζ)
 const 𝒮² = Shift(4//3) # u ↦ u(⋅ + 4ζ)
@@ -16,7 +16,7 @@ const ℰ₀ = Evaluation(0)
 # reflection t ↦ -t on EvenFourier, i.e. a_k ↦ a_{-k}
 _reflect(a::Sequence{<:SymmetricSpace{<:Fourier}}) = Sequence(space(a), reverse(coefficients(a)))
 
-# in-place scaling of an operator block (LinearAlgebra.rmul! compares the scalar with one, which intervals forbid)
+# in-place scaling of an operator block (LinearAlgebra.rmul! compares the scalar with one, which fails on intervals)
 function _scale!(A::LinearOperator, s::Number)
     coefficients(A) .*= s
     return A
@@ -159,8 +159,7 @@ function DF_marchal!(DF, x, Ω)
 
     project!(component(Duv, 3, 3), Derivative(1))
 
-    # w³ (I - 𝒮) + Rw³ (I - 𝒮²): the shifted spaces are kept exactly in the
-    # intermediate step and the result is restricted afterwards
+    # w³ (I - 𝒮) + Rw³ (I - 𝒮²), accumulated into the block without truncation
     for i ∈ 1:3
         mul!(component(Duu, i, i), Multiplication(w³),  Id - 𝒮,  one_, one_)
         mul!(component(Duu, i, i), Multiplication(Rw³), Id - 𝒮², one_, one_)

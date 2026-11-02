@@ -5,11 +5,10 @@
 # and unstable manifolds, Chebyshev coefficients of the connecting orbit) and
 # evaluates, in interval arithmetic, the conditions of statement.md: for each of
 # the six subproblems the Y and Z bounds of the paper and the Radii Polynomial
-# Theorem 1.1, chained as
-# in the original code (each subproblem uses the validated enclosures of the
-# previous ones). The approximate inverses are recomputed here in floating
-# point from the frozen data, exactly as in the original code. Nothing is
-# searched for or solved here: no Newton, no eigensolver, no ODE solver.
+# Theorem 1.1, each subproblem using the validated enclosures of the previous
+# ones. The approximate inverses are recomputed here in floating point from the
+# frozen data. Nothing is searched for or solved here: no Newton, no
+# eigensolver, no ODE solver.
 #
 # Usage (from the package root):
 #   julia --project=checker checker/verify.jl
@@ -55,7 +54,7 @@ function readbin(name, n) # n little-endian binary64 numbers
 end
 pairs_to_complex(v) = complex.(v[1:2:end], v[2:2:end])
 
-# constants of the proof (script/main.jl of the original code; paper, Sections 2–4)
+# constants of the proof (paper, Sections 2–4)
 
 parameters = (I"0.75", I"0.45") # (a, b) = (3/4, 9/20)
 K_Q, ν_Q = 15, interval(1.1)    # stable manifold of c₀: Taylor order, weight
@@ -71,16 +70,12 @@ eig_c1 = pairs_to_complex(readbin("eig_c1.bin", 2 * (3 + 9)))
 Q_bar = Sequence((Taylor(K_Q) ⊗ Taylor(K_Q))^3, readbin("Q_bar.bin", 3 * (K_Q + 1)^2))
 P_data = Sequence((Taylor(K_P) ⊗ Taylor(K_P))^3, pairs_to_complex(readbin("P_bar.bin", 2 * 3 * (K_P + 1)^2)))
 
-# Conjugacy symmetry of P̄ (Remark (real_image) and the paragraph after eq.
-# (enclosure_der) of the revised manuscript). statement.md deduces the symmetry
-# P⋆_{(m,n)} = conj(P⋆_{(n,m)}) of the validated P⋆, hence P⋆(γ(α)) ∈ ℝ³, from the
-# uniqueness of the zero of the manifold map in a ball centred at P̄; this needs
-# P̄ itself to be exactly symmetric. The frozen data are symmetric up to rounding
-# noise only (condition 5e reports the deviation), so P̄ is symmetrised here, bit
-# for bit, and it is this P̄ that is validated in condition 5.
-# NB: RadiiPolynomial's `conjugacy_symmetry!` implements a different symmetry
-# (real coefficients on Taylor and Chebyshev factors, reflection k ↦ -k along
-# Fourier axes only) and must not be used here.
+# Symmetry P̄_{(m,n)} = conj(P̄_{(n,m)}) of P̄ (Remark (real_image) of the revised
+# manuscript). statement.md deduces P⋆(γ(α)) ∈ ℝ³ from the uniqueness of the
+# zero in a ball centred at P̄, which needs P̄ exactly symmetric; the frozen data
+# are symmetric up to rounding noise only, so P̄ is symmetrised here, bit for
+# bit (condition 5e reports the deviation). RadiiPolynomial's
+# `conjugacy_symmetry!` implements a different symmetry and is not used.
 function swap_conjugate_symmetrise(P)
     P_sym = copy(P)
     K = order(component(P, 1))[1]
@@ -124,26 +119,22 @@ eig0 = validated_eigen(Df(c0_star, parameters), λ0_approx, V0_approx)
 eig1 = validated_eigen(Df(c1_star, parameters), λ1_approx, V1_approx)
 λ0, V0 = eig0.eig
 λ1, V1 = eig1.eig
-# each eigenpair is validated on ℂ³ × ℂ (ℝ³ × ℝ when real) with the 1-norm, as the
-# equilibrium (Section 2.2 of the manuscript of 28 October 2026); a conjugate pair
-# is validated once and the second eigenpair is defined as the conjugate
+# each eigenpair is validated on ℂ³ × ℂ (ℝ³ × ℝ when real) with the 1-norm; a
+# conjugate pair is validated once, the second eigenpair being its conjugate
 fmt_certs(e, field) = join(["λ$(j): $(c.conjugate_of == 0 ? getfield(c, field) : "conj. of λ$(c.conjugate_of)")" for (j, c) ∈ enumerate(e.certs)], "; ")
 validated(e) = [c for c ∈ e.certs if c.conjugate_of == 0]
 
-# the type of the equilibria (the comments of script/main.jl), which includes the
-# hypothesis Re(λ₁)Re(λ₂) > 0 of Proposition 3.3 for the two eigenvalues used
-# for each manifold
+# the type of the equilibria, which includes the hypothesis Re(λ₁)Re(λ₂) > 0 of
+# Proposition 3.3 for the two eigenvalues used for each manifold
 spectrum_c0 = eltype(λ0) <: Interval && sup(λ0[1]) < 0 && sup(λ0[2]) < 0 && inf(λ0[3]) > 0
 spectrum_c1 = isthinzero(imag(λ1[1])) && sup(real(λ1[1])) < 0 &&
     inf(real(λ1[2])) > 0 && inf(real(λ1[3])) > 0 && !in_interval(0, imag(λ1[2])) &&
     isequal_interval(real(λ1[2]), real(λ1[3])) && isequal_interval(imag(λ1[2]), -imag(λ1[3]))
 
-# Conjugacy of the eigenpairs of c₁ (used in statement.md to deduce the symmetry
-# of P⋆, condition 5e): the approximate data must be exactly invariant under
-# (λ₂, v₂, λ₃, v₃) ↦ (conj λ₃, conj v₃, conj λ₂, conj v₂), with λ̄₁, v̄₁ real, and the
-# validated enclosures must then be conjugate too (real parts equal, imaginary
-# parts opposite). Bitwise conjugate data have the same normalisation index for
-# v̄₂ and v̄₃ (same moduli), as the uniqueness argument requires.
+# Conjugacy of the eigenpairs of c₁ (needed for the symmetry of P⋆, condition
+# 5e): the data must satisfy λ̄₁, v̄₁ real and (λ̄₃, v̄₃) = (conj λ̄₂, conj v̄₂)
+# bit for bit, and the enclosures must then be conjugate too (real parts equal,
+# imaginary parts opposite).
 eigdata_c1_conjugate = imag(λ1_approx[1]) == 0 && all(imag.(V1_approx[:,1]) .== 0) &&
     λ1_approx[3] == conj(λ1_approx[2]) && V1_approx[:,3] == conj(V1_approx[:,2])
 eigvecs_c1_conjugate = all(isequal_interval.(real.(V1[:,2]), real.(V1[:,3]))) &&
@@ -199,7 +190,7 @@ het = validate(pb_het, x_bar, μ)
 
 condition("6a. orbit: θ̄₁ ± R, θ̄₂ ± R in the domain (-ν_Q, ν_Q) of Lemma 4.3 (applied on the ball)", het.θ_in_domain, "θ₁ ∈ $(het.θ_ball[1]), θ₂ ∈ $(het.θ_ball[2]), ν_Q = $(ν_Q)")
 condition("6b. orbit: Y (Section 4, Step 4) is a finite bound", finite(het.Y), "Y ∈ $(het.Y)")
-condition("6c. orbit: Z₀(R) (Proposition 4.4, revised: B(α, θ) over the ball) is a finite bound", finite(het.Z₀), "Z₀(R) ∈ $(het.Z₀)")
+condition("6c. orbit: Z₀(R) (Proposition 4.4, B(α, θ) over the ball) is a finite bound", finite(het.Z₀), "Z₀(R) ∈ $(het.Z₀)")
 condition("6d. orbit: Z₁(R) (Proposition 4.4) is a finite bound", finite(het.Z₁), "Z₁(R) ∈ $(het.Z₁), R = $(het.R)")
 condition("6e. orbit: Theorem 1.1 (Z = Z₀(R) + Z₁(R) < 1, Y/(1-Z) ≤ R)", het.proof_success,
     "Z ∈ $(het.Z), interval of existence $(het.ie); r = $(het.r), ᾱ = $(x_bar[end-2])")

@@ -1,14 +1,14 @@
 # ------------------------------------------------------------------
 # The symmetric Fourier spaces of the P₁₂ family (paper, Section 2).
 #
-# RadiiPolynomial represents a symmetry as a group acting on the Fourier
-# coefficients by (g ⋅ a)_k = α_g(k) a_{β_g(k)}, with β_g an automorphism of the
-# index lattice and α_g(k) = e^{iπ(θ + φk)} a cocycle. Two generators suffice:
+# RadiiPolynomial's SymmetricSpace is the subspace invariant under a group
+# acting on the coefficients by (g ⋅ a)_k = α_g(k) a_{β_g(k)}, with β_g a map
+# of the index lattice and α_g(k) = e^{iπ(θ + φk)}. Two generators are needed:
 #   flip(θ)   : a_k = e^{iπθ} a_{-k}        θ = 0: cosine series, θ = 1: sine series
 #   parity(θ) : a_k = e^{iπ(θ + k)} a_k     θ = 0: even modes only, θ = 1: odd modes only
-# One coefficient per orbit is stored (the representative is k ≥ 0 for the
-# cosine and sine series), and norms, products, derivatives and projections
-# account for the full orbit.
+# One coefficient per orbit is stored (k ≥ 0 for the cosine and sine series,
+# in increasing order); norms, products, derivatives and projections account
+# for the full orbit.
 # ------------------------------------------------------------------
 
 _flip(θ::Rational{Int})   = GroupElement(LatticeAut([-1;;]), Cocycle(θ, Rational{Int}[0//1]))
@@ -39,14 +39,14 @@ marchal_space(K::Int, ω = 1) = marchal_space(K, K, K, ω)
 # Real-valuedness. A real function has a_{-k} = conj(a_k), so the stored
 # coefficients are real on the cosine spaces, purely imaginary on the sine
 # spaces, and conjugate in pairs (k, -k) on EvenFourier. The Chebyshev
-# coefficients in Ω of a real function are real as well, so the same rule
-# applies to the tensor spaces Chebyshev ⊗ (symmetric Fourier). For interval
-# data, the average of two enclosures of the same value is an enclosure.
+# coefficients in Ω of a real function are real too, so the same rule applies
+# to Chebyshev ⊗ (symmetric Fourier). For interval data, the average of two
+# enclosures of the same value is an enclosure.
 # ------------------------------------------------------------------
 
-# the angle θ (in units of π) of the relation a_k = e^{iπθ} a_{-k} at the index `k`, or `nothing`
-# without reflection; the cocycle angle must be evaluated at `k` since a composite such as
-# flip ∘ parity carries its sign in the phase
+# the angle θ (in units of π) of the relation a_k = e^{iπθ} a_{-k} at the index
+# `k`, or `nothing` without reflection. The angle is evaluated at `k`: a
+# composite such as flip ∘ parity carries its sign in the phase φ.
 _dot(φ, k::Int) = φ[1] * k
 _dot(φ, k::Tuple) = sum(φ .* k)
 function _flip_angle(G::Group, k)

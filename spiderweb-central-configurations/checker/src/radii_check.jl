@@ -1,7 +1,6 @@
-# The radii-polynomial check of one case (n, l): Theorem 6.1 of the paper with
-# the bounds Y₀, Z₀ of Section 6.1 and the Z₂ bound of Lemma 6.3, evaluated in
-# interval arithmetic, and the radii polynomial handled by
-# RadiiPolynomial.interval_of_existence.
+# Radii-polynomial check of one case (n, l): Theorem 6.1 with Y₀, Z₀ of
+# Section 6.1 and Z₂ of Lemma 6.3, in interval arithmetic; the polynomial is
+# handled by RadiiPolynomial.interval_of_existence.
 
 """
     check_case(n, l, x̄; λ, m0, m, r_star)
@@ -40,13 +39,11 @@ function check_case(n::Int, l::Int, x̄::Vector{Float64};
     Z2 = opnorm(A*D2F, Inf)                             # ‖A B(B̄_{ρ*}(x̄))‖_∞, Lemma 6.3
 
     # Radii polynomial. Z₂ bounds ‖A D²f‖ on the whole ball, so Taylor's formula
-    # gives ‖A(f(x) − f(x̄) − Df(x̄)(x − x̄))‖ ≤ Z₂ρ²/2 and the Newton–Kantorovich
-    # polynomial Y₀ + (Z₀ − 1)ρ + Z₂ρ²/2 of RadiiPolynomial applies with Z₂ as it
-    # is; the paper's p(ρ) = Z₂ρ² − (1 − Z₀)ρ + Y₀ (Theorem 6.1, no 1/2) is the
-    # coarser mean-value version. Y₀, Z₀, Z₂ may be any upper bounds: the suprema
-    # of the enclosures are used. The library returns an interval I ⊂ [0, ρ*] on
-    # which Y₀ + (Z₀ − 1)ρ + Z₂ρ²/2 ≤ 0 and Z₀ + Z₂ρ < 1, and `true`; or the
-    # empty interval and `false`.
+    # gives the polynomial Y₀ + (Z₀ − 1)ρ + Z₂ρ²/2 of RadiiPolynomial (the paper's
+    # Theorem 6.1 has no 1/2; see statement.md, condition 2). The suprema of the
+    # enclosures are passed. The library returns an interval I ⊂ [0, ρ*] on which
+    # the polynomial is ≤ 0 and Z₀ + Z₂ρ < 1, and `true`; or the empty interval
+    # and `false`.
     ie, success = interval_of_existence(interval(sup(Y0)), interval(sup(Z0)), interval(sup(Z2)), r_star)
     success &= isguaranteed(ie)
 

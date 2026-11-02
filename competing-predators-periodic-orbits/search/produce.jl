@@ -2,8 +2,7 @@
 #
 # Finds the numerical approximation of the family of periodic orbits and of
 # its Floquet normal form on the Chebyshev nodes (ODE integration, Newton
-# refinement, continuation in κ: `construct_tube` of the original code, run
-# with the parameters of script/main.jl), then writes them to data/.
+# refinement, continuation in κ: `construct_tube`), then writes them to data/.
 #
 # Everything here may be replaced by any other method of producing an
 # approximation; the checker does not care how the data were obtained.
@@ -29,7 +28,7 @@ using .CompetingPredatorsSearch, RadiiPolynomial, LinearAlgebra
 
 BLAS.set_num_threads(min(2, Sys.CPU_THREADS))
 
-# script/main.jl of the original code
+# parameters of Theorem 1.1, starting point of the continuation, truncation orders
 
 γ = m₁ = m₂ = y₁ = y₂ = 1.0
 d₁, d₂, a₁, a₂ = 0.8, 0.5, 10.0, 41.0

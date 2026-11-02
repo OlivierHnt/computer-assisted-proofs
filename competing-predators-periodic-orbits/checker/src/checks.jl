@@ -1,19 +1,12 @@
-# Port of src/BHWPeriodicCoexistence.jl of the original repository
-# (github.com/OlivierHnt/BHWPeriodicCoexistence.jl, commit 6effd7d) to
-# RadiiPolynomial 0.11 / IntervalArithmetic 1.0: the Chebyshev grid <-> coefficient
-# transforms and the a posteriori checks of Sections 2.3 and 3 of the paper.
-#
-# Changes from the original, API only:
-# - `grid2cheb`/`cheb2grid` used the removed `ifft!`/`fft` on sequences whose
-#   coefficients were Chebyshev sequences; nested sequences are no longer
-#   supported, so the Chebyshev variable is now the leading factor of a tensor
-#   space (Chebyshev(N) ⊗ Fourier(K)), and the transforms are `to_coef`/`to_grid`
-#   on the same nodes (33 nodes for N = 30, 65 nodes for 2N, as before).
-#   The node order of the frozen grids is η = -1 first; RadiiPolynomial's is
-#   η = +1 first, hence the `reverse`.
-# - `sequence_error` is now `total_error`.
+# Chebyshev grid <-> coefficient transforms, and the a posteriori checks of
+# Sections 2.3 and 3 of the paper: positivity and boundary crossings of the
+# family (prove_interior, prove_crossing; sign_derivative is the derivative
+# enclosure of Lemma 2.6) and the localisation of the Floquet exponents in a
+# box (prove_inside_box). From src/BHWPeriodicCoexistence.jl of
+# OlivierHnt/BHWPeriodicCoexistence.jl, commit 6effd7d.
 
-# Chebyshev interpolation, of order N, of node values given at η_ℓ = -cos(ℓπ/(npts-1))
+# Chebyshev interpolation, of order N, of node values given at η_ℓ = -cos(ℓπ/(npts-1)),
+# ℓ = 0 first; `to_coef` expects η = +1 first, hence the `reverse`
 grid2cheb(x_grid::Vector{<:Sequence}, N) = to_coef(reverse(x_grid), Chebyshev(N))
 
 # entrywise Chebyshev interpolation of matrices given on the same nodes; returns
@@ -42,7 +35,7 @@ function cheb2grid(C::Array{T,3}, m) where {T}
     return G
 end
 
-# prove a crossing
+# positivity and crossings (Section 2.3)
 
 function prove_interior(τ, ζ₁, ζ₂; a, b, n)
     check = true
@@ -75,7 +68,7 @@ function prove_crossing(τ, ζ, ζ_vanish; a, b, n, ν)
     return check
 end
 
-#
+# bisect the rectangle Ix × Iy until f is bounded on every piece (or a piece is thinner than 1e-6)
 
 function evaluate_adaptive(f, Ix, Iy)
     queue = [(Ix, Iy)]
@@ -104,14 +97,14 @@ function evaluate_adaptive(f, Ix, Iy)
     return check
 end
 
-# `at` is the parameter value where the eigenvalues are counted (any point of [a, b]).
+# Floquet exponents in a box (Section 3); `at` ∈ [a, b] is where the eigenvalues are counted
 function prove_inside_box(C; a, b, at = a, left_side, right_side, bottom_side, top_side)
     C_at_0 = evaluate.(C, Ref((at, 0)))
     Λ_at_0 = eigvals(C_at_0)
 
     check = 0
     for j ∈ 1:3
-        check += issubset_interval(Λ_at_0[j], complex(interval(left_side, right_side), interval(bottom_side, top_side))) # at 0, spectrum inside the box
+        check += issubset_interval(Λ_at_0[j], complex(interval(left_side, right_side), interval(bottom_side, top_side))) # enclosures inside the box
     end
 
     #

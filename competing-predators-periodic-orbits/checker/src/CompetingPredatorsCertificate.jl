@@ -1,6 +1,6 @@
-# The proof functions of the original repository (BHWPeriodicCoexistence.jl),
-# without the numerical continuation (numerics.jl, OrdinaryDiffEq), which lives
-# in search/.
+# Proof functions of the checker: the zero-finding maps, the Newton–Kantorovich
+# bounds and the a posteriori checks. From OlivierHnt/BHWPeriodicCoexistence.jl
+# (commit 6effd7d), without the numerical continuation, which lives in search/.
 module CompetingPredatorsCertificate
 
     using RadiiPolynomial

@@ -1,6 +1,6 @@
 # Starting guesses for the continuation of search/produce.jl: the orbits at
 # N₁N₂N₃ = 10, rounded to 6 significant digits and truncated to the Fourier
-# modes |k| ≤ 8 (from the original data of HLPeriodicOrbits_VIII_IX.jl).
+# modes |k| ≤ 8 (from the data of HLPeriodicOrbits_VIII_IX.jl).
 # Not part of the proof. Entries: type => (γ, [Σ₊, Σ₋, N₁, N₂, N₃]), each
 # component a vector of the complex coefficients of the modes k = -8:8.
 SEEDS = Dict(

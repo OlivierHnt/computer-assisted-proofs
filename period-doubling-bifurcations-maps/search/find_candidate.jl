@@ -1,12 +1,9 @@
 # SEARCH — not part of the proof.
 #
 # Finds the numerical approximation X̄ = (x̄, v̄, λ̄, w̄, μ̄, h̄) of a zero of the
-# period-doubling map F_pd by floating-point Newton iterations, exactly as in
-# kot_schaffer.jl of OlivierHnt/PeriodDoublingMaps.jl (lines 32–45), and
-# writes it to data/X_bar.bin.
-#
-# Any other method of producing X̄ would do; the checker does not care how the
-# data were obtained.
+# period-doubling map F_pd by floating-point Newton iterations and writes it to
+# data/X_bar.bin. Any other way of producing X̄ would do.
+# Verbatim from OlivierHnt/PeriodDoublingMaps.jl/kot_schaffer.jl, lines 32–45.
 #
 # Usage (from the package root; this is the `produce` command of entry.json):
 #   julia --project=search search/find_candidate.jl

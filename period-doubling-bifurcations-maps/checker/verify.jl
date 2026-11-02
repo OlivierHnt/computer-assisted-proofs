@@ -1,13 +1,12 @@
 # CHECKER — the proof.
 #
 # Reads the frozen numerical approximation X̄ of a zero of the period-doubling
-# map F_pd, and evaluates in interval arithmetic the conditions of
+# map F_pd and evaluates, in interval arithmetic, the conditions of
 # statement.md: the Newton–Kantorovich bounds Y, Z (Theorem 5.1 of the paper),
 # the Gershgorin conditions (Theorem 5.2), the normal-form coefficient c and
 # the crossing speed ν̇_c (Theorem 5.3, Theorem 6.1). Nothing is searched for
-# or solved here: only evaluated. The arithmetic is that of kot_schaffer.jl
-# (OlivierHnt/PeriodDoublingMaps.jl, lines 47–74), unchanged; only the input
-# and the printing differ.
+# or solved here: only evaluated.
+# Arithmetic verbatim from OlivierHnt/PeriodDoublingMaps.jl/kot_schaffer.jl, lines 47–74.
 #
 # Usage (from the package root):
 #   julia --project=checker checker/verify.jl
@@ -30,8 +29,7 @@ function condition(label, ok, enclosure)
     return ok
 end
 
-# intervals printed as [inf, sup] with Julia's shortest round-trip Float64
-# representation, i.e. bit-exactly
+# intervals printed as [inf, sup], endpoints bit-exact (shortest round-trip Float64)
 fmt(x::Interval) = "[$(inf(x)), $(sup(x))]"
 
 # exact comparison of a Float64 with a decimal number p / 10^q
@@ -56,8 +54,8 @@ println("loaded X̄ ∈ ℝ^$(length(X_bar)) (n = $n), λ̄ = $(X_bar[2n+1]), μ
 println()
 
 # ---- auxiliary object: the approximate inverse Q ----------------------------
-# Any matrix will do for Theorem 5.1; it is recomputed here in floating point,
-# as in the original script, and then used as a thin interval matrix.
+# Any matrix will do for Theorem 5.1; it is computed in floating point and
+# then used as a thin interval matrix.
 
 Q = inv(DF(X_bar, β, κ))
 
@@ -88,9 +86,9 @@ condition("3. Z < 1 and r₀ = Y/(1 - Z) < r⋆ = $R (Theorem 5.1)", proved & is
 
 # ---- Theorem 5.2 (Gershgorin), step (2) of Theorem 5.3 -----------------------
 # A_r encloses A = D_x f(x⋆, λ⋆) over the ball B(X̄, r₀); V approximates the
-# eigenvectors of its midpoint (auxiliary, recomputed in floating point), and
-# 𝓜 encloses V⁻¹ A V. Since V is real, each disk 𝒟_k is centred on the real
-# axis and is represented by its trace on ℝ, the real interval D[k].
+# eigenvectors of its midpoint (auxiliary, floating point), and 𝓜 encloses
+# V⁻¹ A V. Since V is real, each disk 𝒟_k is centred on the real axis and is
+# represented by its trace on ℝ, the real interval D[k].
 
 x_r, v_r, λ_r, w_r, μ_r, h_r = parts(interval.(X_bar, inf(ie); format = :midpoint))
 A_r = Df(x_r, λ_r, β_i, κ_i)
@@ -105,7 +103,7 @@ others = [k for k = 1:n if k ≠ k₀]
 check_4a = (eltype(V_i) === Interval{Float64}) && all(isguaranteed, D) && in_interval(-1, D[k₀])
 check_4b = all(isdisjoint_interval(D[k], D[k₀]) for k ∈ others)
 check_4c = all(sup(abs(D[k])) < 1 for k ∈ others)
-(check_4a && check_4b && check_4c) == spectrum_verified || error("internal: Gershgorin sub-conditions disagree with the original test")
+(check_4a && check_4b && check_4c) == spectrum_verified || error("internal: Gershgorin sub-conditions 4a–4c disagree with their conjunction")
 
 condition("4a. disk 𝒟_$k₀ contains -1 (Theorem 5.2)", check_4a,
     "D[$k₀] = $(fmt(D[k₀])); largest disk radius $(maximum(radius, D)); V real: $(eltype(V_i) === Interval{Float64})")

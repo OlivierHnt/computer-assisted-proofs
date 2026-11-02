@@ -1,35 +1,8 @@
-# Copied from HLPeriodicOrbits_VIII_IX.jl/src/proof.jl (commit 746d8e7).
-# Changes, all confined to input/output:
-#   - `prove(filename)` (which read a JLD2 file) is replaced by `prove_case`,
-#     which takes the objects read from data/*.bin by `read_case`;
-#   - the `print`/`println` calls are replaced by storing the same printed
-#     quantities in the dictionary `out`, returned to checker/verify.jl, which
-#     prints them as conditions;
-#   - `check_not_identically_zero` and `check_no_zeros` also return the point
-#     evaluation that decided them (resp. N(0), the number of steps and the
-#     smallest |N(tⱼ)| met), and no longer print a progress counter.
-# The arithmetic, the order of the operations and the control flow are those
-# of the original.
-#
-# PORT to RadiiPolynomial 0.11 / IntervalArithmetic 1.0 (Julia 1.13): only the
-# API changed —
-#   Interval(…) constructors        → interval(…)
-#   isempty(::Interval)             → isempty_interval
-#   iszero(::Interval) (thin zero)  → isthinzero
-#   a > b, a < b on intervals (IA 0.20: the strict "less" of IEEE 1788,
-#     inf(a) < inf(b) and sup(a) < sup(b), numbers promoted to thin
-#     intervals)                    → isstrictless
-#   convert(Interval{Float64}, π)   → interval(π)
-#   ParameterSpace()                → ScalarSpace()
-#   A * DF - I (now a lazy operator) → rsub!(A * DF, I) (same entries: the
-#     identity is subtracted on the common indices of domain and codomain)
-#   broadcasting over Sequences (no longer supported) → explicit loops over
-#     the coefficients; the in-place symmetrisation keeps the element order of
-#     the 0.7.2 broadcast (k = -n, …, n, reading entries already updated)
-#   ie = interval_of_existence(…)   → ie, _ = interval_of_existence(…)
-#     (the 0.11 function returns the interval and a success flag, and its
-#     right endpoint is min(R, (1 - Z₁)/Z₂) instead of the larger root of the
-#     radii polynomial; see statement.md).
+# The map F and its derivative DF (Section 4.1), the bounds Y, Z₁, Z₂ and the
+# radii polynomial (Proposition B.1), and the checks giving the hypotheses of
+# Lemma 4.2 (Appendix B). `prove_case` stores the computed quantities in a
+# dictionary `out`, which checker/verify.jl prints as conditions.
+# From HLPeriodicOrbits_VIII_IX.jl/src/proof.jl, commit 746d8e7.
 
 function prove_case(x, C₁, C₂, ν, R)
     out = Dict{Symbol,Any}()
@@ -45,7 +18,7 @@ function _prove_periodic_orbit(x, C₁::Interval{Float64}, C₂::Interval{Float6
     x₁, x₂ = component(x, 1), component(x, 2)
     for x₁ⱼ ∈ eachcomponent(x₁)
         c = coefficients(x₁ⱼ)
-        for i ∈ eachindex(c) # in place, k = -n, …, n: the broadcast of RadiiPolynomial 0.7.2
+        for i ∈ eachindex(c) # in place, k = -n, …, n, reading entries already updated (see statement.md, Symmetry)
             c[i] = (c[i] + conj(c[end+1-i])) / 2
         end
         x₁ⱼ[0] = real(x₁ⱼ[0])
@@ -80,6 +53,7 @@ function _prove_periodic_orbit(x, C₁::Interval{Float64}, C₂::Interval{Float6
     Y = norm(A * F, X)
     out[:Y] = Y
 
+    # rsub!(A * DF, I) is A * DF - I
     Z₁ = opnorm(rsub!(A * DF, I), X) +
         bound_tail_A * opnorm_Df(x, X_Fourier) +
         opnorm_A * inv(ν^(3n+1)) * max(
@@ -119,7 +93,7 @@ function _prove_periodic_orbit(x, C₁::Interval{BigFloat}, C₂::Interval{BigFl
     x₁, x₂ = component(x, 1), component(x, 2)
     for x₁ⱼ ∈ eachcomponent(x₁)
         c = coefficients(x₁ⱼ)
-        for i ∈ eachindex(c) # in place, k = -n, …, n: the broadcast of RadiiPolynomial 0.7.2
+        for i ∈ eachindex(c) # in place, k = -n, …, n, reading entries already updated (see statement.md, Symmetry)
             c[i] = (c[i] + conj(c[end+1-i])) / 2
         end
         x₁ⱼ[0] = real(x₁ⱼ[0])
@@ -169,6 +143,7 @@ function _prove_periodic_orbit(x, C₁::Interval{BigFloat}, C₂::Interval{BigFl
     Y = norm(A_₆₄ * F, X)
     out[:Y] = Y
 
+    # rsub!(A * DF, I) is A * DF - I
     Z₁_₆₄ = opnorm(rsub!(A_₆₄ * DF_₆₄, I), X_₆₄) +
         bound_tail_A_₆₄ * opnorm_Df(x_₆₄, X_Fourier_₆₄) +
         opnorm_A_₆₄ * inv(ν_₆₄^(3n+1)) * max(

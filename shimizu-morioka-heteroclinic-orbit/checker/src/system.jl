@@ -1,4 +1,4 @@
-# Shimizu-Morioka system (Section 2 of the paper; the vector field is written as in the paper's snippet)
+# Shimizu-Morioka system (Section 2 of the paper)
 
 function f(u, params)
     a, b = params

@@ -1,14 +1,8 @@
-# PRODUCER — not part of the proof.
-#
-# Replays the continuation loop of the original `spiderweb.proof_𝑛ℓ` (2019
-# code, src/spiderweb.jl) for λ = -1, m₀ = 0, mᵢ = 1/l, n ∈ 5:100,
+# Producer, not part of the proof. Replays the Newton continuation of the
+# authors' code (spiderweb.jl, 2019) for λ = -1, m₀ = 0, mᵢ = 1/l, n ∈ 5:100,
 # l ∈ 18:200, and writes the Newton output x̄(n, l) of every case to
-# data/radii.bin. The only change to the loop is that each call
-# `radii(x, m0, m, λ, n, l)` (the proof, done by checker/) is replaced by
-# recording a copy of x. Everything else, including the order of the loops,
-# the initial guesses and the in-place updates of x (which also act on the
-# saved vector x2, since `x2 = x` aliases it), is kept as in the original
-# (the identifiers 𝑛, ℓ of the 2019 code are written n, l).
+# data/radii.bin. The loop order, the initial guesses and the in-place updates
+# of x are kept as they are (x2 aliases x, so the updates of x also change x2).
 #
 # Usage (from the package root):
 #   julia --project=search search/produce.jl
@@ -31,7 +25,7 @@ const L_RANGE = collect(18:1:200)
 function produce_nl(λ::Float64, n_range::Vector, l_range::Vector)
 	sols = Dict{Tuple{Int,Int},Vector{Float64}}()
 	record(x, n, l) = (sols[(n, l)] = copy(x))
-	# --- body of spiderweb.proof_𝑛ℓ, radii(...) ↦ record(...) ---
+	# continuation loop; record saves each Newton output
 	m0 = 0. # set central mass to zero
 	x = float.(1:n_range[1])
 	x2 = x

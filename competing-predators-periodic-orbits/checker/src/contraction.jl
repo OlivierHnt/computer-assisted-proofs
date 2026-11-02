@@ -1,41 +1,25 @@
-# Port of src/contraction.jl of the original repository
-# (github.com/OlivierHnt/BHWPeriodicCoexistence.jl, commit 6effd7d) to
-# RadiiPolynomial 0.11 / IntervalArithmetic 1.0. Same mathematics: same maps,
-# truncations (K, K_lin, N), weight ν, radius R, the same bounds Y, Z₁, Z₂, the
-# same grids (33 nodes for x̄ and A, 65 nodes for the products A W₁).
-#
-# What changed, API only:
-# - `ValidatedSequence` → `InfiniteSequence` (error: `sequence_error` → `total_error`);
-#   `norm(::ValidatedSequence)` was ‖sequence‖ + error, written `_vnorm` below
-#   (the new `norm(::InfiniteSequence)` may return a different valid bound).
-# - Sequences whose coefficients were Chebyshev sequences ("nested", e.g. x_cheb,
-#   A_cheb, W₀_cheb, W₁_cheb) are no longer supported by RadiiPolynomial. The
-#   Chebyshev variable is now the leading factor of the tensor space
-#   Chebyshev(N) ⊗ Fourier(K) (the representation the original already used for
-#   τ_ot, u₁_ot, …), and A_cheb is an array of Chebyshev coefficients.
-#   `conjugacy_symmetry!` and `polish!` of the nested sequence are applied
-#   slice by slice (`_conjugacy_symmetry_cheb!`, `_polish_cheb!`), exactly as the
-#   original applied them coefficient by coefficient.
-# - W₀ is assembled in that representation; its norm Σ‖·‖_{P_ν} is the same sum.
-# - cheb2grid(W₁_cheb, 2N) evaluated, entry by entry, the Chebyshev data of W₁ at
-#   the 65 nodes; W₁ depends linearly on those data, so the port evaluates the
-#   data at the 65 nodes first and assembles W₁(η_j) node by node with the same
-#   construction (`construct_W₁_po`, `construct_W₁_lin` below, on scalars).
-# - `interval_of_existence` returns (interval, success); `opnorm(M, 1)` of an
-#   interval matrix is written out as the column-sum maximum (`_opnorm1`).
+# Newton–Kantorovich bounds of Theorem 2.1: Y, Z₁, Z₂ and the interval of
+# existence for the family of periodic orbits (prove_po, Section 2.2) and for
+# the Floquet normal form (prove_lin, Appendix A), from the node values of the
+# approximations and of the approximate inverses. The Chebyshev variable η is
+# the leading factor of the tensor space Chebyshev(N) ⊗ Fourier(K); the
+# approximate inverses A, B are arrays of Chebyshev coefficients. The products
+# A W₁ are formed on 65 nodes (Chebyshev order 2N) and interpolated back.
+# From src/contraction.jl of OlivierHnt/BHWPeriodicCoexistence.jl, commit 6effd7d.
 
-# number of Chebyshev nodes of the original grids: fft_size(Chebyshev(n)) ÷ 2 + 1 in RadiiPolynomial 0.8
+# number of nodes of the discrete Chebyshev transform of order n (33 for n = 30, 65 for n = 60)
 _npts(n) = nextpow(2, 2n + 1) ÷ 2 + 1
 
-_vnorm(a::InfiniteSequence) = sequence_norm(a) + total_error(a) # norm(::ValidatedSequence) of RadiiPolynomial 0.8
+_vnorm(a::InfiniteSequence) = sequence_norm(a) + total_error(a) # norm of the coefficients plus the tail error
 
-# differentiate(::ValidatedSequence) of RadiiPolynomial 0.8 for a sequence with zero error:
-# same Banach space (the new `differentiate(::InfiniteSequence)` moves to the unweighted ℓ¹)
+# derivative of a sequence with zero error, kept in the same Banach space
+# (the library's `differentiate` would move it to the unweighted ℓ¹)
 function _differentiate(a::InfiniteSequence, α)
     iszero(total_error(a)) || throw(ArgumentError("only sequences without error are differentiated here"))
     return InfiniteSequence(differentiate(sequence(a), α), banachspace(a))
 end
 
+# operator 1-norm of a matrix of nonnegative entries: largest column sum
 function _opnorm1(M::AbstractMatrix)
     nrm = zero(real(eltype(M)))
     for j ∈ axes(M, 2)
@@ -54,8 +38,8 @@ _cheb_slice(a::Sequence, k) = Sequence(Chebyshev(order(a)[1]), a[(:,k)])
 # P_ν norms of the Chebyshev series C[:, i, j]
 _cheb_norms(C::Array{T,3}, Pν) where {T} = [norm(Sequence(Chebyshev(size(C, 1) - 1), C[:,i,j]), Pν) for i ∈ axes(C, 2), j ∈ axes(C, 3)]
 
-# old `conjugacy_symmetry!` on the nested sequence: ScalarSpace components real,
-# Fourier components a_k ← (a_k + conj(a_{-k}))/2, Chebyshev coefficient by coefficient
+# conjugation symmetry Σ(x̄) = x̄ (Lemma 2.4): ScalarSpace components real,
+# Fourier components a_k ← (a_k + conj(a_{-k}))/2, for every Chebyshev coefficient
 function _conjugacy_symmetry_cheb!(x)
     for c ∈ eachcomponent(component(x, 1))
         coefficients(c) .= real.(coefficients(c))
@@ -68,7 +52,7 @@ function _conjugacy_symmetry_cheb!(x)
     return x
 end
 
-# old `polish!(x_cheb_[i])` for every coefficient i of the nested sequence
+# `polish!` applied to every Chebyshev series of coefficients
 function _polish_cheb!(x)
     for c ∈ eachcomponent(component(x, 1))
         polish!(c)
@@ -88,7 +72,7 @@ end
 #
 
 function construct_approx_inverse(x_po_grid, x_lin_grid, κ₁, κ₂, (γ, m₁, m₂, y₁, y₂, d₁, d₂, a₁, a₂), N)
-    npts = length(x_po_grid) # = fft_size(Chebyshev(N)) ÷ 2 + 1 of RadiiPolynomial 0.8
+    npts = length(x_po_grid)
     N_fft = 2(npts - 1)
     _κ⁻¹_grid = [mid(κ₁ + κ₂ - cospi((2j)/N_fft)*(κ₂ - κ₁))/mid(2κ₁*κ₂) for j ∈ npts-1:-1:0];
 
@@ -140,12 +124,12 @@ function construct_W₀_po(x_cheb, approx_tang_cheb, vτf₁, vτf₂, vτf₃, 
     W₀_u₂ = project(differentiate(u₂_cheb, (0, 1)) - sequence(vτf₂), s)
     W₀_u₃ = project(differentiate(u₃_cheb, (0, 1)) - sequence(vτf₃), s)
 
-    # ‖W₀‖ = Σ of the P_ν norms of all its Chebyshev coefficients (old: norm(norm.(W₀_cheb, Ref(Pν)), 1))
+    # ‖W₀‖ = Σ of the P_ν norms of all its Chebyshev coefficients
     return norm(ρ₁, Pν) + norm(Sequence(Chebyshev(order(ρ₂)[1]), coefficients(ρ₂)), Pν) + norm(Sequence(Chebyshev(order(ρ₃)[1]), coefficients(ρ₃)), Pν) +
         norm(W₀_u₁, Wν) + norm(W₀_u₂, Wν) + norm(W₀_u₃, Wν)
 end
 
-# W₁ at one node η (the original built it with Chebyshev-sequence entries, then evaluated them at the nodes)
+# W₁ (Section 2.2.2) at one node η
 function construct_W₁_po(approx_tang, f₁, f₂, f₃, τ∂ζ₁f₃, τ∂ζ₂f₃, J)
     K = order(component(approx_tang, 1))
 
@@ -182,6 +166,7 @@ function construct_W₁_po(approx_tang, f₁, f₂, f₃, τ∂ζ₁f₃, τ∂�
     return W₁
 end
 
+# Ŵ₁ (Appendix A) at one node η
 function construct_W₁_lin(vecC, V, J)
     K_lin = order(V[1,1])
 
@@ -229,7 +214,7 @@ function _opnorm_AW₁_I(A_cheb, W₁_grid, N, Pν)
     return _opnorm1(norms)
 end
 
-# proof of the periodic solution
+# Theorem 2.1 for F (prove_po) and then for G at the validated orbit (prove_lin)
 
 function prove_contraction(x_po_grid_, x_lin_grid_, κ₁, κ₂, (γ, m₁, m₂, y₁, y₂, d₁, d₂, a₁, a₂); K, K_lin, N, ν, R)
     x_po_grid = project.(x_po_grid_, Ref(ScalarSpace()^3 × Fourier(K, 1.0)^3))
@@ -246,7 +231,7 @@ function prove_contraction(x_po_grid_, x_lin_grid_, κ₁, κ₂, (γ, m₁, m�
 
     true_τ, true_ζ₁, true_ζ₂, true_u₁, true_u₂, true_u₃, bounds_po = prove_po(x_po_grid, A_po_grid, κ₁, κ₂, (γ, m₁, m₂, y₁, y₂, d₁, d₂, a₁, a₂), K, N, ν, R)
 
-    true_C, bounds_lin = prove_lin(x_lin_grid, A_lin_grid, true_τ, true_ζ₁, true_ζ₂, true_u₁, true_u₂, true_u₃, κ₁, κ₂, (γ, m₁, m₂, y₁, y₂, d₁, d₂, a₁, a₂), K_lin, N, ν) # ν = 1. should fails, but does not
+    true_C, bounds_lin = prove_lin(x_lin_grid, A_lin_grid, true_τ, true_ζ₁, true_ζ₂, true_u₁, true_u₂, true_u₃, κ₁, κ₂, (γ, m₁, m₂, y₁, y₂, d₁, d₂, a₁, a₂), K_lin, N, ν)
 
     #
 
@@ -294,7 +279,7 @@ function prove_po(x_po_grid, A_po_grid, κ₁, κ₂, (γ, m₁, m₂, y₁, y�
     # Y bound #
     ###########
 
-    #----
+    #---- (ū₃ + αⱼ)⁻¹ and its error bound (Lemma 2.2) in 256-bit intervals, converted outward to binary64
     big_vu₃ = InfiniteSequence(big(u₃_ot), Wν)
     big_vg₁ = inv(big_vu₃ + vα₁)
     big_vg₂ = inv(big_vu₃ + vα₂)
@@ -336,8 +321,8 @@ function prove_po(x_po_grid, A_po_grid, κ₁, κ₂, (γ, m₁, m₂, y₁, y�
         _opnorm1(total_error.(vJ))
         )
 
-    # the Chebyshev data of W₁, evaluated at the 65 nodes of the products (old: cheb2grid(W₁_cheb, 2N))
-    m = _npts(2N) # 65 nodes for N = 30, as cheb2grid(·, 2N) in the original
+    # the Chebyshev data of W₁, evaluated at the 65 nodes of the products A W₁
+    m = _npts(2N) # 65 nodes for N = 30
     tang_grid = [to_grid(project(component(approx_tang_cheb, j), Chebyshev(N) ⊗ Fourier(K, interval(1))), (m,)) for j ∈ 1:3]
     on_grid(v) = to_grid(project(sequence(v), Chebyshev(N) ⊗ Fourier(K, interval(1))), (m,))
     f₁_grid, f₂_grid, f₃_grid = on_grid(vf₁), on_grid(vf₂), on_grid(vf₃)

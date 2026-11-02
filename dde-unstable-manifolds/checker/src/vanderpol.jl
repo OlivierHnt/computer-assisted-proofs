@@ -17,14 +17,10 @@ include("common.jl")
 # parameters: the tightest binary64 intervals around the decimals
 const a, b, μ, τ = I"0.9", I"0.1", interval(1), interval(2)
 const c = (interval(0), interval(0))                 # equilibrium (u, v) = (0, 0)
-# eigenvector scaling, ξ = s (1, λ). The paper does not print s for Section
-# 4.1; s = 2 reproduces its bounds Y, Z₁, Z₂ to all printed digits (the
-# authors' notebook uses s = 1.4, which gives Y ≈ 2.5e-52, Z₁ ≈ 0.212)
-const s = interval(2)
-const N = 99                                         # Taylor order (the paper's, Section 4.1)
+const s = interval(2)                                # eigenvector scaling, ξ = s (1, λ); Section 4.1 does not print s
+const N = 99                                         # Taylor order (Section 4.1)
 const r_star = 1e-3                                  # radius r* of Theorem 3.1 (binary64 nearest to 10⁻³)
 const r_λ = 1e-10                                    # radius of the disc on which f″ is bounded (eigenvalue proof)
-const ε_paper = 5.2636242474841115e-16               # the paper's eigenvalue radius (Section 4.1), for comparison
 
 const S = Taylor(N) ⊗ Taylor(N)
 
@@ -57,18 +53,16 @@ delayed(a¹, λ, τ) = Sequence(space(a¹), [a¹[α] * exp(-Λ(α, λ) * τ) for
 # A₀ = c, A_{e₁} = ξ, A_{e₂} = ξ̄ (Lemma 1.2), and for 2 ≤ |α| ≤ N, with
 # F̂_α = (0, −μ \hat{(a² * b¹ * b¹)}_α) (eq. (24)) and the inverse of Ψ(z),
 #   A_α = −Ψ(⟨α,Λ⟩)^{-1} F̂_α = −(μ / f(z)) ĥ_α (1, z),   ĥ = \hat{(b¹ * b¹ * a²)}, z = ⟨α,Λ⟩,
-# evaluated order by order on the enclosures of the coefficients of order < |α|
-# (the hat product only involves those). By inclusion isotonicity the
-# intervals obtained contain the exact Π_N(A) for every λ in the enclosure,
-# provided every f(⟨α,Λ⟩) is nonzero (non-resonance up to order N), which is
-# checked: its interval must exclude zero.
+# order by order on the enclosures of the coefficients of order < |α|. By
+# inclusion isotonicity the intervals contain the exact Π_N(A) for every λ in
+# the enclosure, provided every f(⟨α,Λ⟩) is nonzero, which is checked (its
+# interval must exclude zero).
 #
-# Conjugate symmetry: the parameters are real and Λ = (λ, λ̄), so the
-# homological equation at (α₂, α₁) is the complex conjugate of the one at
-# (α₁, α₂), and by induction A_{(α₂,α₁)} = conj(A_{(α₁,α₂)}) exactly. The
-# coefficients are therefore computed for α₁ ≤ α₂ and the mirror entry is set
-# to the conjugate of the enclosure, which encloses the exact mirror
-# coefficient (conjugation of a complex interval is exact).
+# Conjugate symmetry: the parameters are real and Λ = (λ, λ̄), so the equation
+# at (α₂, α₁) is the complex conjugate of the one at (α₁, α₂) and
+# A_{(α₂,α₁)} = conj(A_{(α₁,α₂)}) exactly. The coefficients are computed for
+# α₁ ≤ α₂ and the mirror entry is set to the conjugate enclosure (conjugation
+# of a complex interval is exact).
 function solve_homological_equations(λ)
     a¹, a², b¹ = (zeros(Complex{Interval{Float64}}, S) for _ ∈ 1:3)
     ξ = eigenvector(λ)
@@ -109,7 +103,7 @@ function bounds(A, λ)
     # 2. Y (eq. (30)): the only nonlinear monomial is −μ y₁² x₂, so
     #    Y = C_N Σ_{|α| > N} |μ (b¹ * b¹ * a²)_α| (for |α| > N the hat product is
     #    the full product, as Π_N(A)_α = 0); the product lives on Taylor(3N)⊗Taylor(3N),
-    #    i.e. the sum runs over all N+1 ≤ |α| ≤ 3N (the formula of Section 4.1)
+    #    so the sum runs over all N+1 ≤ |α| ≤ 3N
     Y = C * abs(μ) * tail_norm(b¹ * b¹ * a², N)
 
     # 3. Z₁ (eq. (31)): ∂_{x₂}F̂₂ = −μ b¹ * b¹, ∂_{y₁}F̂₂ = −2μ b¹ * a², the other

@@ -1,8 +1,8 @@
 module MarchalCertificate
 
-# The P₁₂ symmetric spaces, the map F and its derivative, and the witness I/O.
-# Everything else the proof needs (Chebyshev interpolation, products, norms,
-# the radii polynomial) is RadiiPolynomial. No plotting dependencies.
+# The P₁₂ symmetric spaces, the map F and its derivative, and the input file
+# I/O. Everything else (Chebyshev interpolation, products, norms, the radii
+# polynomial) comes from RadiiPolynomial.
 
 using RadiiPolynomial
 
@@ -14,13 +14,11 @@ include("marchal.jl")
     export F_marchal!, DF_marchal!
 
 # ------------------------------------------------------------------
-# Input I/O.
+# Input file.
 #   x_nodes.bin : for each node, the d complex interval coefficients of x̄ in
 #                 the symmetric representation, stored as
-#                 (inf re, sup re, inf im, sup im) — four binary64 each.
-# Raw little-endian IEEE binary64 throughout; no text round-trip.
-# The approximate inverses A on the nodes are not stored: they are cheap to
-# recompute from x̄ (see approximate_inverse).
+#                 (inf re, sup re, inf im, sup im), four binary64 each.
+# Raw little-endian IEEE binary64, no header.
 # ------------------------------------------------------------------
 
 function write_witness(dir, x_nodes::Vector{<:Sequence})
@@ -45,9 +43,8 @@ function read_witness(dir, npts::Int, d::Int)
     return x_nodes
 end
 
-# Floating-point inverse of DF(x, Ω) at the midpoint of an interval node value
-# x; any matrix would do, the proof only needs it to be the same operator
-# wherever it is used.
+# Floating-point inverse of DF(x, Ω) at the midpoint of an interval node value.
+# Not an input: any matrix would do, as long as the same one is used throughout.
 function approximate_inverse(x::Sequence, Ω::Float64, K::Int)
     X = marchal_space(K, 1.0)
     xf = Sequence(X, mid.(coefficients(x)))

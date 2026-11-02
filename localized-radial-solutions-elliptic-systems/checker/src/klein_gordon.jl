@@ -1,7 +1,6 @@
-# From EllipticPDELocalizedRadialSol.jl (commit c0fda16). Port to RadiiPolynomial 0.11:
-# `opnorm(L, Inf)` of a LinearOperator is now a column-based bound (sum over
-# columns of the column maxima); the original matrix ∞-norm (maximum row sum)
-# is `opnorm(coefficients(L), Inf)`. Otherwise verbatim.
+# The Klein–Gordon equation (Section 4.1): N, DN, f, Df, their norm bounds, and
+# the ψ̂ of Proposition 2.2. `opnorm(coefficients(L), Inf)` is the matrix ∞-norm
+# (maximum row sum). From EllipticPDELocalizedRadialSol.jl, commit c0fda16.
 
 struct KleinGordon{T}
     d :: Int

@@ -1,24 +1,10 @@
 # The proof of one localized radial solution: Proposition 2.2 (Lyapunov–Perron
 # contraction), the bounds Y, Z₁, Z₂ and the radii polynomial of Theorem 3.3,
-# and the C⁰ error of Corollary 3.5 (arXiv numbering).
-#
-# Copied from EllipticPDELocalizedRadialSol.jl (src/proof.jl, commit c0fda16),
-# ported to RadiiPolynomial 0.11 / IntervalArithmetic 1.0: `Interval(x)` →
-# `interval(x)`, `ParameterSpace` → `ScalarSpace`, `isempty` → `isempty_interval`,
-# and `interval_of_existence` → `interval_of_existence_071` (the algorithm of
-# RadiiPolynomial 0.7.1, reimplemented in compat.jl, since the 0.11 function
-# returns a different interval), and in-place broadcasts on Sequence and
-# LinearOperator (no longer supported) act on their coefficients. Further
-# changes, all I/O and printing only:
-#   - `prove(filename)` (JLD2 loading) and `display_data` are replaced by
-#     `prove(data, report, label)`, which takes the data already read from
-#     data/*.bin (see io.jl);
-#   - `__prove` reports each condition through `report.condition(...)` instead
-#     of `println`, evaluates every bound even when an earlier condition fails,
-#     and records timings;
-#   - `isLPcontracting` also returns the three inequalities separately.
-# The arithmetic (every expression, its operands and their order) is unchanged;
-# F and DF are verbatim.
+# and the C⁰ error of Corollary 3.5 (arXiv v2 numbering). `prove(data, report,
+# label)` takes the data read by io.jl and reports each condition through
+# `report.condition(label, ok, enclosure)`; every bound is evaluated even when
+# an earlier condition fails.
+# From EllipticPDELocalizedRadialSol.jl, src/proof.jl, commit c0fda16.
 
 function prove(data::NamedTuple, report, label::String)
     return _prove(data.equation, data.x, data.n_T_pad, data.n_C_pad, data.c, data.Λ, data.Γ,
@@ -60,7 +46,7 @@ function __prove(eq, x, n_T_pad, n_C_pad, c, Λ, Γ, l, r_star, L, ℒ_x, ℒ_y,
     norm_η = norm(η, Inf)
     μ = norm_η + ϱ
 
-    # Proposition 2.2 (original: isLPcontracting)
+    # Proposition 2.2
 
     LP = isLPcontracting_parts(eq, c, Λ, Γ, λ̂, δ, μ, ℒ_x, ℒ_y)
     condition("$label.1a Proposition 2.2, first inequality: (½(d-1)δ + ψ̂)(1+ℒ_y) < λ̂", LP.condition_1,
@@ -89,8 +75,7 @@ function __prove(eq, x, n_T_pad, n_C_pad, c, Λ, Γ, l, r_star, L, ℒ_x, ℒ_y,
         component(tail_f, i+q+1)[0:min(n_C-1, order(component(tail_f, i+q+1)))] .= 0
     end
 
-    # A: floating-point inverse of the midpoint of the square part of DF(x̄; 0),
-    # recomputed here exactly as in the original code (not an input).
+    # A: floating-point inverse of the midpoint of the square part of DF(x̄; 0) (not an input)
     t = @elapsed A = inv(mid.(project(DF_, codomain(DF_), codomain(DF_))))
     push!(timings, "A = inv(mid(DF))" => t)
 
@@ -117,7 +102,7 @@ function __prove(eq, x, n_T_pad, n_C_pad, c, Λ, Γ, l, r_star, L, ℒ_x, ℒ_y,
     t = @elapsed opnorm_A = opnorm(interval.(A), X)
     push!(timings, "‖A‖" => t)
     opnorm_Df_ = opnorm_Df(eq, w, X_C)
-    t₁ = @elapsed ADF_I = rsub!(A * DF_, I) # port: `A * DF_ - I` is a lazy operator in RadiiPolynomial 0.11
+    t₁ = @elapsed ADF_I = rsub!(A * DF_, I)
     push!(timings, "A·DF - I" => t₁)
     t = @elapsed Z₁ = opnorm(ADF_I, X) +
             max(
@@ -175,8 +160,6 @@ function F(eq, x, c, Λ, Γ, l, r_star, L)
 
     #
 
-    # port: Sequence and LinearOperator are no longer broadcastable in RadiiPolynomial 0.11;
-    # the same elementwise operations act on their coefficients
     coefficients(component(F_, 1)) .= _coefs(component(w, 2:(1+q))(one(T))) .- coefficients(c) .- coefficients(Γ * η)
     coefficients(component(F_, 2)) .= _coefs(component(w, (2+q):(1+2q))(one(T))) .+ coefficients(Γ * Λ * η)
 
@@ -274,8 +257,7 @@ function DF(eq, x, n_T, n_C, Λ, Γ, l, r_star, L)
 end
 
 
-# Original isLPcontracting, returning the three inequalities and the
-# quantities they compare (same expressions, same order).
+# The three inequalities of Proposition 2.2 and the quantities they compare.
 
 function isLPcontracting_parts(eq, c, Λ, Γ, λ̂, δ, μ, ℒ_x, ℒ_y)
     ψ̂_ = ψ̂(eq, c, Λ, Γ, μ, ℒ_y)

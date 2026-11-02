@@ -1,20 +1,16 @@
-# Compatibility layer for the port to RadiiPolynomial 0.11 / IntervalArithmetic 1.0.
+# Helpers: printing of intervals and the radii polynomial interval.
 
-# Printing: IntervalArithmetic 1.0 has no `showfull`; print both endpoints in
-# full (shortest round-trip decimal), in the format of IntervalArithmetic 0.20's
-# `showfull`, so that outputs of the two versions can be compared verbatim.
+# Print both endpoints of an interval in full (shortest round-trip decimals).
 _full(x::Interval) = isempty_interval(x) ? "∅" : "Interval($(inf(x)), $(sup(x)))"
 _full(z::Complex{<:Interval}) = "$(_full(real(z))) + $(_full(imag(z)))im"
 _full(x::AbstractArray) = "[" * join(map(_full, x), ", ") * "]"
 _full(x) = string(x)
 showfull(x) = print(_full(x))
 
-# `interval_of_existence(Y, Z₁, Z₂, R)` of RadiiPolynomial 0.7.1
-# (src/rpa/interval_existence.jl), line by line. RadiiPolynomial 0.11 returns a
-# different interval (its right end is min(R, (1 - Z₁)/Z₂) and it works on the
-# intervals rather than on their suprema), so the original algorithm is kept:
-# with Y, Z₁, Z₂, R replaced by their suprema, it returns I ⊂ [0, R] with
-# Y + (Z₁ - 1) r + Z₂ r²/2 ≤ 0 and Z₁ + Z₂ r < 1 for all r ∈ I, or ∅.
+# `interval_of_existence_071(Y, Z₁, Z₂, R)` (from RadiiPolynomial 0.7.1,
+# src/rpa/interval_existence.jl): with Y, Z₁, Z₂, R replaced by their suprema,
+# returns I ⊂ [0, R] with Y + (Z₁ - 1) r + Z₂ r²/2 ≤ 0 and Z₁ + Z₂ r < 1 for
+# all r ∈ I, or ∅.
 
 _supremum(x::Interval) = sup(x)
 _supremum(x::Real) = x
@@ -75,7 +71,6 @@ function interval_of_existence_071(Y_::Real, Z₁_::Real, Z₂_::Real, R_::Real)
     end
 end
 
-# coefficients of a Sequence, or the value itself (evaluation of a sequence on a
-# CartesianSpace returns a Sequence or a Vector depending on the version)
+# coefficients of a Sequence, or the vector itself
 _coefs(x::Sequence) = coefficients(x)
 _coefs(x::AbstractVector) = x

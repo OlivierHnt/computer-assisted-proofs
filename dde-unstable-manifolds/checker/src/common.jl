@@ -43,23 +43,21 @@ end
 #
 # The unstable eigenvalue is a zero of the characteristic function
 # f(λ) = det Ψ(λ), Ψ(λ) = λI − K₁ − e^{−λτ}K₂ (eq. (2)); each case module gives
-# f, f′, f″ in closed form. The enclosure is proved by the radii polynomial
-# theorem (Theorem 3.1) in dimension one, the "rigorous Newton method" of the
-# paper (ref. [38]): with λ̄ the frozen approximate eigenvalue (a binary64
-# number) and A the binary64 number nearest to 1/f′(λ̄) (A ≠ 0), the zeros of f
-# are the fixed points of T(λ) = λ − A f(λ). For |λ − λ̄| ≤ r ≤ r_λ, writing
+# f, f′, f″ in closed form. The enclosure comes from Theorem 3.1 in dimension
+# one (the "rigorous Newton method" of the paper, ref. [38]): with λ̄ the frozen
+# approximate eigenvalue and A the binary64 number nearest to 1/f′(λ̄) (A ≠ 0),
+# the zeros of f are the fixed points of T(λ) = λ − A f(λ). For |λ − λ̄| ≤ r ≤ r_λ,
 # h = λ − λ̄,
 #   |T(λ̄) − λ̄| = |A f(λ̄)| =: Y,
 #   |T′(λ)| = |1 − A f′(λ)| ≤ |1 − A f′(λ̄)| + |A| |f′(λ) − f′(λ̄)| ≤ Z₁ + Z₂ r,
 #        Z₁ := |1 − A f′(λ̄)|,   Z₂ := |A| sup_{|λ−λ̄| ≤ r_λ} |f″(λ)|,
-# (f′(λ) − f′(λ̄) = ∫₀¹ f″(λ̄ + t h) h dt, the segment lies in the disc), hence
-#   |T(λ) − λ̄| ≤ Y + ∫₀¹ |T′(λ̄ + t h)| |h| dt ≤ Y + Z₁ r + Z₂ r²/2.
+# (f′(λ) − f′(λ̄) = ∫₀¹ f″(λ̄ + t h) h dt), hence
+#   |T(λ) − λ̄| ≤ Y + Z₁ r + Z₂ r²/2.
 # So T maps the closed disc D_r(λ̄) into itself when p(r) = Z₂ r²/2 + (Z₁ − 1) r + Y ≤ 0
 # and is a contraction on it when Z₁ + Z₂ r < 1: f has exactly one zero in
-# D_r(λ̄). These are the two inequalities interval_of_existence(Y, Z₁, Z₂, r_λ)
-# certifies on an interval of radii (its radii polynomial has the factor 1/2,
-# so Z₂ is passed as is); ε is its infimum. For real λ (cases II, III) the
-# same argument runs in real arithmetic on the segment [λ̄ − r, λ̄ + r].
+# D_r(λ̄). interval_of_existence(Y, Z₁, Z₂, r_λ) certifies both inequalities on
+# an interval of radii; ε is its infimum. For real λ (cases II, III) the same
+# runs in real arithmetic on the segment [λ̄ − r, λ̄ + r].
 #
 # The sup of |f″| is bounded by the interval evaluation of f″ on `ball(λ̄, r_λ)`,
 # a real interval, or a complex interval (a square) containing the disc.
@@ -96,10 +94,8 @@ resolvent_bound(ζ, normK₁, normK₂, τ) = inv(ζ - normK₁ - normK₂ * exp
 # so by (29) and ‖τ‖ = 1
 #   ‖D²F̂_j(U)‖ ≤ Σ_{p,q} ∂_p∂_q |F_j|(z),   z = (‖π_N a^i‖₁ + r*, ‖π_N τ(a^i)‖₁ + r*)_i.
 # Each mixed pair {x_i, y_j} therefore appears twice, as ∂_{x_i}∂_{y_j} and as
-# ∂_{y_j}∂_{x_i}. Eq. (32) of the paper (and the last display of the proof of
-# Lemma 3.3) prints the mixed term once, which is a misprint: the authors' code,
-# hence the published numbers, use the sum over all ordered pairs implemented
-# here (see statement.md). For a monomial
+# ∂_{y_j}∂_{x_i}; eq. (32) of the paper prints it once (see statement.md,
+# "Notes on the paper"). For a monomial
 # |c| x^κ y^γ with exponent vector e = (κ, γ) ∈ N^{2d},
 #   ∂_p∂_q z^e = e_p (e_q − δ_{pq}) z^{e − e_p − e_q}.
 # `monomials` lists the monomials of |F_j| as (|c|, e), `z` the 2d-vector above.

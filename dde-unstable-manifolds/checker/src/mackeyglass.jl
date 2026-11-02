@@ -18,10 +18,9 @@ const γ, β, τ = interval(1), interval(2), interval(2)
 const ρ = 3
 const c = (interval(0), interval(1))                 # equilibrium (u, v) = (0, 1)
 const s = I"0.7"                                     # eigenvector scaling, ξ = s (1, 0)
-const N = 600                                        # Taylor order (the paper's, Section 4.3)
+const N = 600                                        # Taylor order (Section 4.3)
 const r_star = 1e-3                                  # radius r* of Theorem 3.1 (binary64 nearest to 10⁻³)
 const r_λ = 1e-10                                    # radius of the interval on which f″ is bounded (eigenvalue proof)
-const ε_paper = 2.735639747364635e-16                # the paper's eigenvalue radius (Section 4.3), for comparison
 
 const S = Taylor(N)
 
@@ -56,10 +55,9 @@ delayed(x, λ, τ) = Sequence(space(x), [x[k] * exp(-exact(k) * λ * τ) for k �
 #   F̂_k = (β \hat{(b¹ * b²)}_k,  ρ (γ \hat{((a¹)^ρ * (a²)²)}_k − β \hat{((a¹)^{ρ−1} * (a²)² * b¹ * b²)}_k)),
 # and Ψ(z) is diagonal, so with z = kλ, A_k = −Ψ(z)^{-1} F̂_k reads
 #   a¹_k = −F̂¹_k / Ψ₁₁(z) = β b̂_k / g(z),   a²_k = F̂²_k / z,
-# evaluated order by order on the enclosures of the coefficients of order < k
-# (the hat products only involve those). By inclusion isotonicity the intervals
-# obtained contain the exact Π_N(A) for every λ in the enclosure, provided every
-# f(kλ) = kλ g(kλ) is nonzero (non-resonance up to order N), which is checked.
+# order by order on the enclosures of the coefficients of order < k. By
+# inclusion isotonicity the intervals contain the exact Π_N(A) for every λ in
+# the enclosure, provided every f(kλ) = kλ g(kλ) is nonzero, which is checked.
 function solve_homological_equations(λ)
     a¹, a², b¹, b² = (zeros(Interval{Float64}, S) for _ ∈ 1:4)
     ξ = eigenvector(λ)

@@ -1,15 +1,11 @@
-# CHECKER — the proof.
-#
-# Reads the frozen inputs (data/*.bin: for each of the four solutions, the
-# approximate solution x̄, the equation parameters, the equilibrium c and the
-# eigen-data Λ, Γ as intervals, and the constants of the proof) and evaluates
-# the conditions of statement.md: the hypotheses on the inputs (0a–0d), the
-# three inequalities of Proposition 2.2 (1a–1c, plus 1d with a ψ̂ including |c|
-# and |Γ|), the bounds Y, Z₁, Z₂ and the radii polynomial of Theorem 3.3 (2–5),
-# and the C⁰ error of Corollary 3.5 against the value stated in Theorems
-# 1.1–1.3 (6). Nothing is searched for or solved: the only auxiliary objects
-# computed in floating point are the approximate inverses A = inv(mid(DF)) (as
-# in the original code) and the 4×4 A_eig of Appendix B.
+# The checker. Reads the frozen inputs (data/*.bin: for each solution, the
+# approximate solution x̄, the equation parameters, the equilibrium c, the
+# eigen-data Λ, Γ and the constants of the proof) and evaluates the conditions
+# of statement.md: the hypotheses on the inputs (0a–0c), the inequalities of
+# Proposition 2.2 (1a–1d), the bounds Y, Z₁, Z₂ and the radii polynomial of
+# Theorem 3.3 (2–5), and the C⁰ error of Corollary 3.5 against the value stated
+# in Theorems 1.1–1.3 (6). The only objects computed in floating point are the
+# approximate inverses A = inv(mid(DF)) and the 4×4 A_eig of Appendix B.
 #
 # Usage (from the package root):
 #   julia --project=checker checker/verify.jl <case>...    one or several of
@@ -38,13 +34,11 @@ function condition(label, ok, enclosure)
 end
 
 # ---- BLAS and directed rounding ----------------------------------------------
-# IntervalArithmetic 1.0 encloses interval matrix products (its default `:fast`
-# mode, Rump's midpoint–radius algorithm) with BLAS products computed under
-# directed rounding, in a dedicated OpenBLAS built to propagate the rounding
-# mode to its threads (OpenBLASConsistentFPCSR_jll). Condition 0 tests that the
-# configured number of threads gives the same enclosures as one thread, and
-# that these enclose exact products. CHECKER_BLAS_THREADS=n sets the number of
-# threads of both BLAS libraries (default: IntervalArithmetic's default).
+# Interval matrix products are BLAS products under directed rounding, in an
+# OpenBLAS built to propagate the rounding mode to its threads. Condition 0
+# tests that the configured number of threads gives the same enclosures as one
+# thread, and that these enclose exact products. CHECKER_BLAS_THREADS=n sets
+# the number of threads.
 
 using LinearAlgebra: BLAS
 if haskey(ENV, "CHECKER_BLAS_THREADS")
@@ -111,13 +105,13 @@ for case ∈ CASES
     cond(l, ok, e) = condition(tag(l), ok, e)
     t_case = time()
 
-    # 0. hypotheses on the inputs (added; see statement.md)
+    # 0. hypotheses on the inputs
     local ok, msg
     ok, msg = check_parameters(data);         cond("$(m.k).0a constants satisfy the hypotheses of Theorem 3.3", ok, msg)
     ok, msg = check_symmetry(data);           cond("$(m.k).0b x̄ = S(x̄) (Lemma 3.4)", ok, msg)
     ok, msg = check_equilibrium(eq, data);    cond("$(m.k).0c parameters, equilibrium c and eigen-data (Λ, Γ) enclose the exact ones", ok, msg)
 
-    # 1–5. the original proof (Proposition 2.2 and Theorem 3.3)
+    # 1–5. Proposition 2.2 and Theorem 3.3
     after_LP = (LP, aux) -> begin
         ok, msg = check_LP_strict(eq, data.c, data.Λ, data.Γ, aux.λ̂, aux.δ, aux.μ, interval(data.ℒ_x), interval(data.ℒ_y))
         cond("$(m.k).1d Proposition 2.2 with ψ̂ including |c| and |Γ|", ok, msg)
@@ -127,7 +121,7 @@ for case ∈ CASES
     # 6. Corollary 3.5: C⁰ distance, compared with the value stated in the theorem
     stated = interval(m.stated[1]) / interval(m.stated[2])
     cond("$(m.k).6 C⁰ error (Corollary 3.5) ≤ $(inf(stated)) ($(m.thm))", res.error_sup ≤ inf(stated),
-        "max(ρ̄, |Γ|(ρ̄ + (1+ℒ_y)μ)) ≤ $(res.error_sup) with ρ̄ = $(isempty_interval(res.ρ) ? "∅" : inf(res.ρ)) (original code prints $(res.error))")
+        "max(ρ̄, |Γ|(ρ̄ + (1+ℒ_y)μ)) ≤ $(res.error_sup) with ρ̄ = $(isempty_interval(res.ρ) ? "∅" : inf(res.ρ)) (lower bound $(res.error))")
 
     println("info case $(m.k) timings (s): ", join(["$k $(round(v; sigdigits = 3))" for (k, v) ∈ res.timings], ", "),
         "; total $(round(time() - t_case; sigdigits = 3)); max RSS so far $(round(Sys.maxrss() / 2^30; sigdigits = 3)) GiB")

@@ -16,10 +16,9 @@ include("common.jl")
 const μ, ν, γ, τ = I"0.1", I"0.5", I"0.1", interval(1)
 const c = (interval(1), interval(0))                 # equilibrium (S, I) = (1, 0)
 const s = I"1.8"                                     # eigenvector scaling, ξ = s (ν, −(λ + μ))
-const N = 200                                        # Taylor order (the paper's, Section 4.2)
+const N = 200                                        # Taylor order (Section 4.2)
 const r_star = 1e-3                                  # radius r* of Theorem 3.1 (binary64 nearest to 10⁻³)
 const r_λ = 1e-10                                    # radius of the interval on which f″ is bounded (eigenvalue proof)
-const ε_paper = 7.255548872917566e-16                # the paper's eigenvalue radius (Section 4.2), for comparison
 
 const S = Taylor(N)
 
@@ -55,10 +54,9 @@ delayed(x, λ, τ) = Sequence(space(x), [x[k] * exp(-exact(k) * λ * τ) for k �
 # F̂_k = (−ν \hat{(a¹ * a²)}_k,  νe \hat{(b¹ * b²)}_k) (eq. (17)), and with
 # Ψ(z)^{-1} = (1/f(z)) [Ψ₂₂, ν; 0, Ψ₁₁], z = kλ, A_k = −Ψ(z)^{-1} F̂_k reads
 #   a¹_k = (Ψ₂₂(z) ν â_k − ν νe b̂_k) / f(z),   a²_k = (z + μ) νe b̂_k / f(z),
-# evaluated order by order on the enclosures of the coefficients of order < k
-# (the hat products only involve those). By inclusion isotonicity the intervals
-# obtained contain the exact Π_N(A) for every λ in the enclosure, provided every
-# f(kλ) is nonzero (non-resonance up to order N), which is checked.
+# order by order on the enclosures of the coefficients of order < k. By
+# inclusion isotonicity the intervals contain the exact Π_N(A) for every λ in
+# the enclosure, provided every f(kλ) is nonzero, which is checked.
 function solve_homological_equations(λ)
     a¹, a², b¹, b² = (zeros(Interval{Float64}, S) for _ ∈ 1:4)
     ξ = eigenvector(λ)
@@ -101,7 +99,7 @@ function bounds(A, λ)
 
     # 4. Z₂ (eq. (32), see hessian_sum): |F₁| ∋ ν x₁ x₂, |F₂| ∋ ν e^{−μτ} y₁ y₂,
     #    exponents (x₁, x₂, y₁, y₂) = (1, 1, 0, 0) and (0, 0, 1, 1): the sums are 2ν and
-    #    2ν e^{−μτ}, independent of z; Z₂ = 2 C_N ν (the paper's value, Section 4.2)
+    #    2ν e^{−μτ}, independent of z; Z₂ = 2 C_N ν
     z = (norm(a¹, 1) + r, norm(a², 1) + r, norm(b¹, 1) + r, norm(b², 1) + r)
     Z₂ = C * max(hessian_sum([(ν, (1, 1, 0, 0))], z), hessian_sum([(νe, (0, 0, 1, 1))], z))
 

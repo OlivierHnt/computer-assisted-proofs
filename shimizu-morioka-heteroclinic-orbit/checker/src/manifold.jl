@@ -1,8 +1,7 @@
-# From ShimizuMoriokaTutorial.jl/src/manifold.jl (Section 3 of the paper).
-# Steps 1, 3, 4 verbatim; Step 2 (Newton) is in search/, and validated_solve is
-# replaced by `validate`, which reads the approximate zero P_bar instead of
-# computing it and returns the bounds instead of asserting. Z_bound also
-# returns its two summands Z₀, Z₁ (printing only).
+# Local manifolds (Section 3 of the paper, Proposition 3.3). `validate` takes
+# the approximate Taylor coefficients P_bar and returns the Y, Z₀, Z₁ bounds and
+# the radius of Theorem 1.1.
+# From ShimizuMoriokaTutorial.jl/src/manifold.jl; Step 2 (Newton) is in search/.
 
 struct ManifoldProblem
     f

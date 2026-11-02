@@ -1,12 +1,9 @@
-# Port of src/numerics.jl of the original repository
-# (github.com/OlivierHnt/BHWPeriodicCoexistence.jl, commit 6effd7d) to
-# RadiiPolynomial 0.11 / OrdinaryDiffEq 7: ODE integration, Newton refinement
-# and Chebyshev-node continuation producing the approximate family.
-# Changes, API only: `newton!`'s callback returns (F, DF); `solve(prob, Tsit5(); …)`;
-# `ParameterSpace` → `ScalarSpace`; broadcasting on a Sequence goes through `coefficients`;
-# the removed `Sequence(f, space)` is `_sample`; fft_size(Chebyshev(N)) of 0.8 is written out
-# (same nodes as before: nextpow(2, 2K+1) equispaced points, then the DFT).
+# Numerical search for the approximate family: ODE integration of one periodic
+# orbit, Newton refinement, and continuation in κ over the Chebyshev nodes
+# (construct_tube). From src/numerics.jl of OlivierHnt/BHWPeriodicCoexistence.jl,
+# commit 6effd7d.
 
+# Fourier coefficients of f sampled on nextpow(2, 2K+1) equispaced points
 _sample(f, s::Fourier) = (m = nextpow(2, dimension(s)); to_coef([complex(f(2π * j / m)) for j ∈ 0:m-1], s))
 
 function vectorfield!(du, u, params, t)
@@ -150,7 +147,7 @@ function reach_boundary!(x_po, κ, (γ, m₁, m₂, y₁, y₂, d₁, d₂, a₁
 end
 
 function continuation!(x_po, x_lin, κ₁, κ₂, (γ, m₁, m₂, y₁, y₂, d₁, d₂, a₁, a₂), N)
-    N_fft = nextpow(2, 2N + 1) # port: fft_size(Chebyshev(N)) of RadiiPolynomial 0.8 (64 for N = 30)
+    N_fft = nextpow(2, 2N + 1) # size of the discrete Chebyshev transform (64 for N = 30); the grid has N_fft ÷ 2 + 1 nodes
     npts = N_fft ÷ 2 + 1
     κ⁻¹_grid = [(κ₁ + κ₂ - cospi(2j/N_fft)*(κ₂ - κ₁))/(2κ₁*κ₂) for j ∈ npts-1:-1:0]
 
@@ -172,7 +169,7 @@ function continuation!(x_po, x_lin, κ₁, κ₂, (γ, m₁, m₂, y₁, y₂, d
         # Floquet normal form
         J = τ∂ᵤf(x_po, params)
         refine_lin!(x_lin, J; F_lin_cache = F_lin_cache, DF_lin_cache = DF_lin_cache)
-        x_lin_grid[j] = copy(x_lin) # get_lin(x_po, params, order(component(component(x_lin, 2), 1)))
+        x_lin_grid[j] = copy(x_lin)
     end
 
     return x_po_grid, x_lin_grid

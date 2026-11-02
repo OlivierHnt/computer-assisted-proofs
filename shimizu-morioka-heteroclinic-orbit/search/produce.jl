@@ -1,13 +1,12 @@
 # SEARCH — not part of the proof.
 #
-# Runs the original pipeline of ShimizuMoriokaTutorial.jl (script/main.jl,
-# without the plot): Newton for the equilibrium c₁, the LAPACK eigendecompositions
-# at c₀ and c₁, Newton for the Taylor coefficients of the local stable manifold
-# of c₀ and of the local unstable manifold of c₁, and an ODE solve followed by
-# Newton for the Chebyshev coefficients of the connecting orbit. The
-# validations of the original code are run too, because each approximation is
-# computed from the validated objects of the previous step (mid points of the
-# validated equilibrium, eigenpairs, manifolds), exactly as in the original.
+# Runs the pipeline of ShimizuMoriokaTutorial.jl (script/main.jl, without the
+# plot): Newton for the equilibrium c₁, the LAPACK eigendecompositions at c₀
+# and c₁, Newton for the Taylor coefficients of the local stable manifold of c₀
+# and of the local unstable manifold of c₁, and an ODE solve followed by Newton
+# for the Chebyshev coefficients of the connecting orbit. Its validations are
+# run too, because each approximation starts from the mid points of the
+# validated objects of the previous step.
 #
 # Writes the floating-point approximations to data/ (raw little-endian
 # binary64, see statement.md). The checker does not care how they were
@@ -21,7 +20,7 @@ import Pkg
 Pkg.instantiate()
 
 using RadiiPolynomial, LinearAlgebra
-include(joinpath(@__DIR__, "src", "ShimizuMoriokaTutorial.jl")) # original code (verbatim)
+include(joinpath(@__DIR__, "src", "ShimizuMoriokaTutorial.jl")) # the authors' code, kept verbatim
 using .ShimizuMoriokaTutorial
 const SMT = ShimizuMoriokaTutorial
 

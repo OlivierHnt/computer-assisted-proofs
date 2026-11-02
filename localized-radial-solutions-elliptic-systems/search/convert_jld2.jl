@@ -1,22 +1,14 @@
-# PROVENANCE — not part of the proof.
-#
-# The approximate solutions x̄ (and the constants and enclosures stored with
-# them) were computed by the authors with code that is not in the original
-# repository; the repository ships the result as JLD2 files (written with
-# JLD2 0.4.35, RadiiPolynomial 0.7.1, IntervalArithmetic 0.20.9). This script
-# regenerates data/*.bin from those JLD2 files, bit for bit, and checks the
-# result against data/hashes.json and against the checker's reader.
-#
-# The JLD2 files hold objects of types that no longer exist in the current
-# versions of RadiiPolynomial / IntervalArithmetic, so they are loaded into
-# field-for-field mirror types (module Legacy below) and the binary64 fields
-# are written as they are (including signed zeros).
+# Writes data/*.bin; not part of the proof. The approximate solutions x̄, the
+# constants and the enclosures were computed by the authors and are stored as
+# JLD2 files in OlivierHnt/EllipticPDELocalizedRadialSol.jl (commit c0fda16).
+# This script loads them into field-for-field mirror types (module Legacy),
+# writes their binary64 fields as they are (signed zeros included), and checks
+# the result against data/hashes.json and the checker's reader.
 #
 # Usage (from the package root; the `produce` command of entry.json):
 #   julia --project=search search/convert_jld2.jl [dir]
-# where dir holds the four original .jld2 files; without it they are
-# downloaded from the original repository at commit c0fda16 and their SHA-256
-# checked against the values below.
+# where dir holds the four .jld2 files; without it they are downloaded and
+# their SHA-256 checked against the values below.
 
 import Pkg
 Pkg.instantiate()
@@ -69,7 +61,7 @@ srcdir = length(ARGS) ≥ 1 ? ARGS[1] : mktempdir()
 datadir = joinpath(@__DIR__, "..", "data")
 hashes = isfile(joinpath(datadir, "hashes.json")) ? read(joinpath(datadir, "hashes.json"), String) : ""
 
-# raw binary64 fields of the (reconstructed) legacy objects
+# raw binary64 fields of the loaded objects
 raw_interval(x) = (x.lo, x.hi)
 raw_cinterval(z) = (z.re.lo, z.re.hi, z.im.lo, z.im.hi)
 raw_entry(x, cplx) = cplx ? raw_cinterval(x) : raw_interval(x)

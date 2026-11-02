@@ -1,13 +1,11 @@
 # SEARCH — not part of the proof.
 #
-# Runs the floating-point Newton continuations of the four examples (Step 2 of
-# the original scripts of OlivierHnt/ChebyshevContinuation.jl, copied verbatim)
-# and writes their outputs, the approximate solutions on the Chebyshev nodes
-# (and, for the pseudo-arclength examples, the approximate tangents), to data/.
-# The approximate inverses are not written: the checker recomputes them.
-#
-# Everything here may be replaced by any other method of producing a
-# candidate; the checker does not care how the data were obtained.
+# Runs the binary64 Newton continuations of the four examples (Step 2 of the
+# scripts of OlivierHnt/ChebyshevContinuation.jl) and writes their outputs, the
+# approximate solutions on the Chebyshev nodes (and, for the pseudo-arclength
+# examples, the approximate tangents), to data/. The approximate inverses are
+# not written: the checker recomputes them. Any other method of producing a
+# candidate would do; the checker does not care how the data were obtained.
 #
 # Usage (from the package root; this is the `produce` command of entry.json):
 #   julia --project=search search/produce.jl [outdir] [examples...]
@@ -16,10 +14,9 @@
 #   julia --project=checker tools/hash_data.jl
 #
 # The SKT continuation starts from the initial guesses in
-# search/skt_initial_guesses.bin (bit-exact conversion of skt_data.jld2 of the
-# original repository: 14 vectors of 163 binary64, in the order of SKT.ARC_NAMES).
-# The Cahn–Hilliard initial guess contains rand() (as in the original script);
-# the generator is seeded so that the run is reproducible.
+# search/skt_initial_guesses.bin (skt_data.jld2 of that repository: 14 vectors
+# of 163 binary64, in the order of SKT.ARC_NAMES). The Cahn–Hilliard initial
+# guess contains rand(); the generator is seeded so that the run is reproducible.
 
 import Pkg
 Pkg.instantiate()
@@ -127,12 +124,10 @@ end
 end
 
 # ------------------------------------------------------------------------
-# Cahn–Hilliard (both parameterizations, in the order of the original script)
+# Cahn–Hilliard (both parameterizations)
 
-# Coons' parameterization in binary64, exactly as in the original script (the
-# checker has its own interval version with the exact constants c_max = 1/10,
-# g(c) = 79/2 + 150c²; here 0.1 and 39.5 + 150(…)² are binary64 operations, kept
-# so that the continuation reproduces the frozen inputs bit for bit).
+# Coons' parameterization in binary64 (the checker has its own interval version
+# with the exact constants c_max = 1/10, g(c) = 79/2 + 150c²)
 
 α(s) = (s + 1) / 2 # [-1,1] → [0,1]
 
@@ -166,7 +161,7 @@ let θ = θ_binary64, F = CahnHilliard.F, DF = CahnHilliard.DF
 
 for (case, curves) ∈ (("no_pinch", curves_no_pinch_binary64), ("pinch", curves_with_pinch_binary64))
 
-N₁, N₂ = CahnHilliard.N₁, CahnHilliard.N₂ # the orders of the checker (the paper: 16, 16)
+N₁, N₂ = CahnHilliard.N₁, CahnHilliard.N₂
 
 θ_grid = [θ(curves, -cospi(j₁/N₁), -cospi(j₂/N₂)) for j₁ ∈ 0:N₁, j₂ ∈ 0:N₂]
 
@@ -216,8 +211,8 @@ let F = SKT.F, DvF = SKT.DvF, F_pa = SKT.F_pa, DF_pa = SKT.DF_pa, tangent = SKT.
 
 guesses = reshape(read_floats(joinpath(@__DIR__, "skt_initial_guesses.bin"), 163 * length(SKT.ARC_NAMES)), 163, :)
 
-# The last arc of branches 2 and 3 is produced from the end of the preceding arc rather
-# than from its own stored guess (the other junctions coincide already; see statement.md).
+# The last arc of branches 2 and 3 starts from the last node and tangent of the
+# preceding arc, so the junction data coincide bit for bit (checker condition 4.J).
 chained_to = Dict("u_bar2d" => "u_bar2c", "u_bar3d" => "u_bar3c")
 
 for (i, name) ∈ enumerate(SKT.ARC_NAMES)
@@ -234,8 +229,6 @@ u̇_grid = Vector{Sequence}(undef, N+1)
 # initialize
 
 if haskey(chained_to, name)
-    # Arcs that continue a previous arc start from its last node and tangent, so the
-    # junction data coincide bit for bit (the checker's condition 4.J).
     prev_grid, prev_tangent = read_skt(joinpath(outdir, "skt_$(chained_to[name]).bin"), chained_to[name])
     u_grid[1] = prev_grid[end]
     u̇_grid[1] = prev_tangent[end]

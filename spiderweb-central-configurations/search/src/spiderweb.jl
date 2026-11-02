@@ -1,8 +1,6 @@
-# The Newton solver of the authors' 2019 module (spiderweb.zip, spiderweb.jl of
-# 2019-03-26): the floating-point map F (the spiderweb map f of the paper,
-# Section 6) and its Jacobian DF, and Newton's method. Only this part is used by
-# the producer; the interval-arithmetic proof lives in checker/src/. Changes to
-# the 2019 code: the identifiers 𝑛, ℓ are written n, l; nothing else.
+# Newton solver from the authors' code (spiderweb.jl, 2019): the floating-point
+# map F (f of the paper, Section 6), its Jacobian DF, and Newton's method. Used
+# only by produce.jl; not part of the proof.
 
 module spiderweb
 

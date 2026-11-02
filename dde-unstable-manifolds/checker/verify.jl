@@ -1,13 +1,13 @@
 # CHECKER — the proof.
 #
 # For each of the three examples: reads the frozen approximate eigenvalue λ̄,
-# proves an enclosure of the unstable eigenvalue (radii polynomial theorem for
-# the scalar characteristic function), computes the interval Taylor
-# coefficients of the unstable manifold up to order N from the homological
-# equations, and evaluates the bounds C_N, Y, Z₁, Z₂ of Lemma 3.3 and the radii
-# polynomial of Theorem 3.1 (paper: Hénot, Lessard, Mireles James, JDDE 2022,
-# revised version). Everything is evaluated in binary64 interval arithmetic
-# (RadiiPolynomial / IntervalArithmetic); the only input is λ̄.
+# proves an enclosure of the unstable eigenvalue (Theorem 3.1 applied to the
+# scalar characteristic function), computes the interval Taylor coefficients of
+# the unstable manifold up to order N from the homological equations, and
+# evaluates the bounds C_N, Y, Z₁, Z₂ of Lemma 3.3 and the radii polynomial of
+# Theorem 3.1. Paper: Hénot, Lessard, Mireles James, JDDE 2022, revised version.
+# Everything is computed in binary64 interval arithmetic (RadiiPolynomial /
+# IntervalArithmetic); the only input is λ̄.
 #
 # Usage (from the package root):
 #   julia --project=checker checker/verify.jl
@@ -52,19 +52,15 @@ println()
 
 finite(x) = isbounded(x) && inf(x) ≥ 0 && isguaranteed(x)
 
-# Theorem 3.1 with p(r) = Z₂ r²/2 + (Z₁ − 1) r + Y. RadiiPolynomial's
-# interval_of_existence(Y, Z₁, Z₂, R) certifies p(r) ≤ 0 and Z₁ + Z₂ r < 1 for
-# every r in the interval it returns, a subset of [0, R]; its radii polynomial
-# is Y + (Z₁ − 1) r + Z₂ r²/2, the paper's convention, so Z₂ is passed as is.
-# The Z₂ bound holds on the ball of radius R. The radius retained is
-# r₀ = inf of the interval; the hypotheses of Theorem 3.1 are re-evaluated at
-# r₀ as a direct check. For r ≥ 0, p(r) and Z₁ + Z₂ r increase with Y, Z₁, Z₂,
-# so their suprema over the enclosures are their values at the upper endpoints;
-# these and r₀ are binary64 numbers, and the check evaluates them exactly in
-# rational arithmetic. (An interval evaluation would not do: r₀ is the root of p
-# up to a few ulps, so p(r₀) ≈ −10⁻³² is below the rounding error of the
-# evaluation when Y ∼ 10⁻¹⁶.) Used twice: for the eigenvalue (R = r_λ, giving ε)
-# and for the tail of the Taylor series (R = r*, giving r₀).
+# Theorem 3.1 with p(r) = Z₂ r²/2 + (Z₁ − 1) r + Y. interval_of_existence(Y, Z₁, Z₂, R)
+# certifies p(r) ≤ 0 and Z₁ + Z₂ r < 1 on the interval it returns, a subset of
+# [0, R]; its polynomial has the factor 1/2, so Z₂ is passed as is (the Z₂ bound
+# holds on the ball of radius R). The radius retained is r₀ = inf of that
+# interval, and both inequalities are re-evaluated at r₀ exactly, in rational
+# arithmetic: for r ≥ 0 they increase with Y, Z₁, Z₂, so the upper endpoints of
+# the enclosures are used (an interval evaluation at r₀, a root of p up to a few
+# ulps, would be swamped by its own rounding). Used for the eigenvalue
+# (R = r_λ, giving ε) and for the tail of the Taylor series (R = r*, giving r₀).
 function radii_polynomial(Y, Z₁, Z₂, R)
     I_r, success = interval_of_existence(Y, Z₁, Z₂, R)
     success && !isnai(I_r) && isbounded(I_r) || return false, I_r, NaN
@@ -86,7 +82,7 @@ function eigenvalue_conditions(id, M, λ̄)
     λ = M.ball(λ̄, ε)
     ok &= inf(real(λ)) > 0
     condition("$id.0c eigenvalue (radii polynomial): f has exactly one zero λ in |λ − λ̄| ≤ ε, Re λ > 0", ok,
-        ok ? "r ∈ $(enc(I_r)), ε = $ε (paper: $(M.ε_paper)), λ ∈ $(enc(λ))" : "interval_of_existence failed")
+        ok ? "r ∈ $(enc(I_r)), ε = $ε, λ ∈ $(enc(λ))" : "interval_of_existence failed")
     return λ
 end
 

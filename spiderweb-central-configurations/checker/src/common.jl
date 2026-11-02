@@ -1,8 +1,7 @@
-# Used by checker/verify.jl: the constants of the proof, the frozen inputs,
-# and the printing of the conditions of one case. Requires RadiiPolynomial, LinearAlgebra, SHA, JSON and the
-# files spiderweb.jl, radii_check.jl of this directory to be loaded.
+# Constants of the proof, loading of the frozen inputs, and printing of the
+# conditions of one case. Used by verify.jl after spiderweb.jl and radii_check.jl.
 
-# constants of the proof (paper, Sections 6.1–6.2; original main.jl)
+# constants of the proof (Sections 6.1–6.2)
 const λ  = -1.0           # common factor of the central configuration
 const m0 = 0.0            # central mass
 const N_RANGE = 5:100     # number of circles n
@@ -10,11 +9,9 @@ const L_RANGE = 18:200    # number of half-lines l
 mass(n, l) = fill(1/l, n) # m_i = 1/l (binary64), i = 1, …, n
 const r_star = 1e-5       # ρ*, radius of the ball on which D²f is enclosed
 
-# One thread each for LAPACK (the inverse of mid Df) and for the interval
-# matrix products (IntervalArithmetic's default `matmul = :fast`, Rump's
-# algorithm on a directed-rounding OpenBLAS, which would otherwise use every
-# core), so that cases can run in parallel processes. The results do not
-# depend on these settings, only the run time does.
+# One thread for LAPACK and for the interval matrix products, so that cases
+# can run in parallel processes. The results do not depend on this, only the
+# run time does.
 BLAS.set_num_threads(1)
 IntervalArithmetic.configure(; nthreads = 1)
 

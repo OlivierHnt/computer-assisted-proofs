@@ -1,11 +1,8 @@
-# CHECKER — the proof.
-#
-# Reads the frozen inputs (x̄ as intervals and A as floats on the Chebyshev
-# nodes), encloses everything in interval arithmetic, and evaluates the
-# conditions of statement.md: the input enclosures, the bounds of Lemmas 3.2,
-# 3.3, 3.4 of the paper, the radii-polynomial inequality, and the two sign
-# conditions of Lemma 2.2 (iv). Nothing is searched for or solved here: only
-# evaluated.
+# Checker. Reads the frozen node values of x̄ (intervals), recomputes the
+# approximate inverse A, and evaluates the conditions of statement.md in
+# interval arithmetic: input enclosures, the bounds of Lemmas 3.2, 3.3, 3.4,
+# the radii polynomial, and the sign conditions of Lemma 2.2 (iv). Nothing is
+# searched for or solved here.
 #
 # Usage (from the package root):
 #   julia --project=checker checker/verify.jl
@@ -61,20 +58,17 @@ x_raw   = read_witness(datadir, npts, d)
 x_nodes = [Sequence(X, v) for v ∈ x_raw] # interval-valued node values of x̄
 println("loaded x̄ (intervals) on $npts nodes, d = $d")
 
-# Auxiliary, not an input: the floating-point inverse of DF at the midpoint of
-# each node value, as search/ computes it; the conditions hold for whatever
-# matrix is used, as long as the same one is used throughout.
+# Not an input: a floating-point inverse of DF at the midpoint of each node
+# value. Any matrix would do, as long as the same one is used throughout.
 Ω_nodes = [0.5 + 0.5cospi(j/N) for j ∈ 0:N]
 A_nodes = [LinearOperator(X, X, approximate_inverse(xⱼ, Ωⱼ, K)) for (xⱼ, Ωⱼ) ∈ zip(x_nodes, Ω_nodes)]
 println("computed the approximate inverses A on the $npts nodes")
 println()
 
 # ---- condition 0: the inputs enclose the stated data -------------------------
-# The proof relies on the interpolant passing through the Lagrange triangle at
-# Ω = 1 and through a point with vanishing x-components at Ω = 0, and on x̄
-# being real-valued with β = α = 0. The inputs store intervals; here we verify
-# they enclose those exact values and carry those properties. Downstream the
-# STORED intervals are used, not these reconstructions.
+# The proof needs x̄ to pass through the Lagrange triangle at Ω = 1 and through
+# a point with u_x = v_x = 0 at Ω = 0, and to be real-valued with β = α = 0.
+# The stored intervals are checked for these properties, then used as stored.
 
 widest(cs) = maximum(c -> max(radius(real(c)), radius(imag(c))), cs)
 
@@ -108,9 +102,9 @@ check_planar = all(encloses(c, zero(c)) for c ∈ Ux₀) &&
 condition("0b. node Ω = 0 encloses U_x = V_x = 0", check_planar,
     "max |stored coefficient| of U_x, V_x: $(maximum(c -> max(mag(real(c)), mag(imag(c))), [Ux₀; Vx₀]))")
 
-# the node values are real-valued functions (cosine coefficients real, sine
-# coefficients imaginary, conjugate pairs on w) with β = α = 0; the Chebyshev
-# interpolant of such data has the same properties, which the DFT below imposes
+# real-valued (cosine coefficients real, sine coefficients imaginary, conjugate
+# pairs on w) with β = α = 0; the Chebyshev interpolant of such data has the
+# same properties, which the DFT below imposes
 
 check_real = all(x_nodes) do xⱼ
     all(isequal_interval.(coefficients(impose_reality!(copy(xⱼ))), coefficients(xⱼ))) &&
@@ -121,10 +115,9 @@ condition("0c. every node is real-valued with β = α = 0", check_real,
 
 # ---- Chebyshev interpolants of x̄ and A ---------------------------------------
 # x̄ is the Chebyshev interpolant of the interval node values; its coefficients
-# are enclosed by the DFT in 256-bit interval arithmetic, and so are its values
-# on the finer grids used below. A is the (floating-point) interpolant of the
-# node matrices; it is any operator, so no enclosure is needed for its
-# construction, only for its use.
+# and its values on the finer grid are enclosed by a DFT in 256-bit intervals.
+# A is the floating-point interpolant of the node matrices, then taken as an
+# exact operator.
 
 _big(z) = complex(interval(BigFloat, real(z)), interval(BigFloat, imag(z)))
 _f64(z) = complex(interval(Float64, real(z)), interval(Float64, imag(z)))
@@ -172,8 +165,8 @@ ADF_I = to_coef(ADF_I_grid, Chebyshev(6N))
 
 opnorm_ADF_I = opnorm(ADF_I, norm_space(domain(ADF_I), ν), norm_space(codomain(ADF_I), ν))
 
-#--- the explicit bounds M₁, M₂, computed on the full Fourier representation
-# (Chebyshev(N) ⊗ Fourier) of the components of x̄
+# the explicit bounds M₁, M₂ of Lemma 3.3, computed on the full Fourier
+# representation Chebyshev(N) ⊗ Fourier of the components of x̄
 
 TN(k) = Chebyshev(N) ⊗ Fourier(k, interval(1))
 𝒳 = Ell1(IdentityWeight(), GeometricWeight(ν))
@@ -289,11 +282,8 @@ Z₂ = max(opnorm_A, inv(interval(K + 1))) * opnorm_D²F
 condition("3. Z₂ (Lemma 3.4) is a finite bound", isbounded(Z₂), "Z₂ ∈ $Z₂")
 
 # ---- radii polynomial -----------------------------------------------------
-#
-# Uses RadiiPolynomial.interval_of_existence, i.e. the library's own
-# convention for p(r) = Y + (Z₁ - 1) r + Z₂ r²/2 (check against Theorem
-# [radii polynomial] in the paper). The radius r must lie in the
-# returned interval of existence.
+# interval_of_existence returns the ρ ∈ [0, r] with Y + (Z₁ - 1) ρ + Z₂ ρ²/2 ≤ 0
+# and Z₁ + Z₂ ρ < 1; the radius r must lie in it.
 
 ie, success_rp = interval_of_existence(Y, Z₁, Z₂, sup(r))
 check_rp = success_rp && inf(ie) ≤ inf(r) && sup(r) ≤ sup(ie)
@@ -301,9 +291,8 @@ condition("4. radii polynomial: r = $(inf(r)) lies in the interval of existence"
 
 # ------------------------------------------------------------------------
 # figure-eight shape, Lemma 2.2 (iv)
-# The orbit at Ω = 0 is the node value x_nodes[npts]; the validated functions
-# are represented on Fourier(2K) so that their products are computed without
-# truncation.
+# The orbit at Ω = 0 is the node value x_nodes[npts]. The factors are put on
+# Fourier(2K) so that their products are computed without truncation.
 
 x₀ = x_nodes[npts]
 F2K = Fourier(2K, interval(1))
@@ -327,9 +316,9 @@ condition("5a. μ < 0 on [0, 3/2] (2000 pieces)", check_neg,
     "μ([0, 3/2]) ⊆ $(interval(minimum(inf, μ_vals), maximum(sup, μ_vals)))")
 
 # prove that μ''' is positive on [3/2, π/2]
-# For ‖f - f̄‖_ν ≤ ε the k-th coefficient of f - f̄ is at most ε ν^{-|k|}, so the
-# unweighted ℓ¹ error of the third derivative is at most ε sup_{k ≥ 0} k³ ν^{-k} ≤
-# ε (3 / (e log ν))³, which bounds the pointwise error of μ''' on the real line.
+# If ‖f - f̄‖_ν ≤ ε, the k-th coefficient of f - f̄ is at most ε ν^{-|k|}, so the
+# unweighted ℓ¹ error of f''' is at most ε sup_{k ≥ 0} k³ ν^{-k} ≤ ε (3 / (e log ν))³,
+# which bounds the pointwise error.
 
 C₃ = (interval(3) / (exp(interval(1)) * log(ν)))^3
 ∂³μ = InfiniteSequence(differentiate(sequence(μ), 3), Ell1(); total_error = C₃ * total_error(μ))

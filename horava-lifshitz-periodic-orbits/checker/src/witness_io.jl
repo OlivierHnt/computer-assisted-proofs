@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------
-# Witness I/O (replaces the JLD2 files of the original repository).
+# Reading and writing the frozen inputs.
 #
 # One file per case, data/<TYPE>_N1N2N3_<c>.bin, holding 7 + 4d numbers, in
 # this order:
@@ -85,7 +85,7 @@ end
 """
     read_case(path, n, fmt) -> (x, C₁, C₂, ν, R)
 
-Reconstruct the objects of the original JLD2 file: `x` a `Sequence` on
+Read one case: `x` a `Sequence` on
 `Fourier(n, 1.0)^5 × ScalarSpace()^3` with `Complex{Interval{T}}`
 coefficients, `C₁, C₂, ν :: Interval{T}` and `R :: T`, where `T = Float64`
 for `fmt = :f64` and `T = BigFloat` (precision 256) for `fmt = :mp256`.

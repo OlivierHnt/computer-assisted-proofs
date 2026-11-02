@@ -3,16 +3,10 @@ module CahnHilliard
 # Two-parameter continuation of Cahn–Hilliard steady states (paper, Section 4.1):
 # F(v, c, β) = Δv + β(v - v³ - c) on cosine series (Neumann on (0, 1)), over the
 # U-shaped region Λ parametrised by Coons' map θ of [-1, 1]² (two choices of
-# boundary curves: "no pinch" and "pinch").
-# Adapted from cahn_hilliard.jl of OlivierHnt/ChebyshevContinuation.jl. The Newton
-# continuation (Step 2) is removed: its output v_grid is an input. The bounds are
-# the ones derived in statement.md from Theorem 2.11 and Appendix A; they differ
-# from the original script in four places, each marked "revision" below:
-#   (a) the ℓ¹ norms weigh every nonzero Chebyshev index by 2 (sum over n ∈ Z²);
-#   (b) Z₁ includes the tail term of Section 4.1 (columns > q of I - 𝒜D𝓕);
-#   (c) the Chebyshev grids are large enough for every product to be exact;
-#   (e) θ̄ is an interval enclosure of the exact Coons map (polynomial arithmetic),
-#       so that Proposition 3.3 applies and the result covers all of Λ.
+# boundary curves: "no pinch" and "pinch"). The bounds are those of statement.md
+# (Section 4.1, Step 3, and Appendix A).
+# From cahn_hilliard.jl of OlivierHnt/ChebyshevContinuation.jl, Step 2 (Newton
+# continuation) removed: its output v_grid is an input.
 
 using RadiiPolynomial, LinearAlgebra
 
@@ -24,19 +18,15 @@ export ch_certificate, curves_no_pinch, curves_with_pinch, N₁, N₂, K, θ, F,
 
 # Step 1: Defining the problem
 
-# Chebyshev orders in s = (s₁, s₂) and cosine order of ū. The paper uses N₁ = N₂ = 16
-# (with the library norm of weight 1 on the Chebyshev indices); with the paper's norm
-# the "pinch" case needs N₁ = N₂ = 20 to pass (see statement.md). K = 20 is ample
-# (the cosine coefficients of the data decay to 1e-15 at k = 20).
+# Chebyshev orders in s = (s₁, s₂) and cosine order of ū
 
 const N₁, N₂ = 20, 20
 
 const K = 20
 
 # ℓ¹ norms (paper, eq. (ell1_multi) and Section 4) with ω ≡ 1 and χ ≡ 1: the sums run
-# over n ∈ Z² and k ∈ Z, so every nonzero Chebyshev or cosine index has weight 2.
-# (revision (a): one `IdentityWeight()` per factor; the single-weight `Ell1()` of
-# RadiiPolynomial 0.11 gives weight 1 to the Chebyshev indices of a tensor space.)
+# over n ∈ Z² and k ∈ Z, so every nonzero Chebyshev or cosine index has weight 2
+# (one `IdentityWeight()` per factor of the tensor space)
 
 const X_Λ  = Ell1(IdentityWeight(), IdentityWeight())                   # ℓ^{1,⊗2}(R): Chebyshev ⊗ Chebyshev
 const X_CH = Ell1(IdentityWeight(), IdentityWeight(), IdentityWeight()) # ℓ^{1,⊗2}(𝒳): (Chebyshev ⊗ Chebyshev ⊗ cosine)_sym
@@ -48,7 +38,7 @@ const X_CH = Ell1(IdentityWeight(), IdentityWeight(), IdentityWeight()) # ℓ^{1
 # They accept a number s (point evaluation) or a Chebyshev sequence s (polynomial
 # arithmetic): in the latter case θ(curves, s₁, s₂) is an interval Chebyshev polynomial
 # enclosing the exact θ, which is a polynomial of degree ≤ 2 in each variable
-# (revision (e); see statement.md, Example 3).
+# (statement.md, Example 3).
 
 struct BoundaryCurves{T₁,T₂,T₃,T₄}
     γ₁ :: T₁
@@ -108,7 +98,7 @@ F(v, c, β) = Laplacian() * v + β * (v - v^3 - c)
 
 DF(v, c, β) = Laplacian() + Multiplication(β * (exact(1) - exact(3) * v^2))
 
-# utilitary (Step 4 of the original script)
+# utilities
 
 struct PseudoInverseLaplacian <: AbstractDiagonalOperator end
 RadiiPolynomial.getcoefficient(::PseudoInverseLaplacian, (codom, i)::Tuple{SymmetricSpace{<:Fourier},Integer}, (dom, j)::Tuple{SymmetricSpace{<:Fourier},Integer}) =
@@ -188,7 +178,7 @@ function ch_certificate(curves, v_grid::Matrix{Sequence})
     # the degree counts below hold in each variable separately (N = N₁ or N₂)
 
     #- Y bound: Y = ‖𝒜 𝓕̃(ū)‖, 𝓕̃(ū) = Δū + β̄(ū - ū³ - c̄)
-    #  A has degree N, β̄ū³ degree 3N + N_θ: the product has degree 4N + N_θ (revision (c))
+    #  A has degree N, β̄ū³ degree 3N + N_θ: the product has degree 4N + N_θ
 
     m₁_Y, m₂_Y = fast_nodes(4N₁ + N_θ), fast_nodes(4N₂ + N_θ)
 
@@ -202,9 +192,9 @@ function ch_certificate(curves, v_grid::Matrix{Sequence})
     Y_grid = A_grid_Y .* F.(v_grid_Y, c_grid_Y, β_grid_Y)
     Y = norm(interpolate(Y_grid, m₁_Y, m₂_Y), X_CH)
 
-    #- Z₁ bound: Z₁ = max(‖Π_{≤q} - 𝒜 D𝓕̃(ū) Π_{≤q}‖, ‖β̄(1 - 3ū²)‖ / (π(K+1))²), q = 3K as in the paper
-    #  (Appendix A with the bandwidth 2K of D𝓕̃(ū); the second term bounds the columns > q,
-    #  on which 𝒜 D𝓕̃(ū) Π_{>q} = Δ₀⁻¹Π_{>K} (Δ + β̄(1 - 3ū²)) Π_{>q}: revision (b))
+    #- Z₁ bound: Z₁ = max(‖Π_{≤q} - 𝒜 D𝓕̃(ū) Π_{≤q}‖, ‖β̄(1 - 3ū²)‖ / (π(K+1))²), q = 3K
+    #  (the second term bounds the columns > q, on which
+    #  𝒜 D𝓕̃(ū) Π_{>q} = Δ₀⁻¹Π_{>K} (Δ + β̄(1 - 3ū²)) Π_{>q}; see statement.md)
     #  A D𝓕̃(ū) has degree N + 2N + N_θ; β̄(1 - 3ū²) has degree 2N + N_θ
 
     m₁_Z, m₂_Z = fast_nodes(3N₁ + N_θ), fast_nodes(3N₂ + N_θ)

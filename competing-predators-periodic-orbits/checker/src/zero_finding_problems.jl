@@ -1,7 +1,7 @@
-# From src/zero_finding_problems.jl of the original repository; port: `DF .= 0` and the
-# coefficient-wise product of the phase condition go through `coefficients` (broadcasting
-# over a Sequence no longer means coefficient-wise operations)
-# (github.com/OlivierHnt/BHWPeriodicCoexistence.jl, commit 6effd7d).
+# The zero-finding maps and their derivatives: F_po!, DF_po! for the family of
+# periodic orbits (F of Section 2.1), τ∂ᵤf the Jacobian of the vector field,
+# and F_lin!, DF_lin! for the Floquet normal form (G of Section 3).
+# From src/zero_finding_problems.jl of OlivierHnt/BHWPeriodicCoexistence.jl, commit 6effd7d.
 
 # Periodic orbit
 
@@ -13,7 +13,7 @@ function F_po!(F, x, (δ₁, δ₂, α₁, α₂, λ₁, λ₂), approx_tang)
 
     component(F, 1)[1] = sum(coefficients(u₁) .* conj.(coefficients(component(approx_tang, 1)))
                           .+ coefficients(u₂) .* conj.(coefficients(component(approx_tang, 2)))
-                          .+ coefficients(u₃) .* conj.(coefficients(component(approx_tang, 3)))) # port: coefficient-wise product spelled out
+                          .+ coefficients(u₃) .* conj.(coefficients(component(approx_tang, 3)))) # phase condition
     component(F, 1)[2] = u₁(0) - 1
     component(F, 1)[3] = u₂(0) - 1
 
@@ -34,7 +34,7 @@ function DF_po!(DF, x, (δ₁, δ₂, α₁, α₂, λ₁, λ₂), approx_tang)
     τ, ζ₁, ζ₂ = component(x, 1)
     u₁, u₂, u₃ = eachcomponent(component(x, 2))
 
-    coefficients(DF) .= 0 # port: broadcasting on a LinearOperator is no longer supported
+    coefficients(DF) .= 0
 
     #
 
@@ -132,7 +132,7 @@ function DF_lin!(DF, x, J)
     C = [vecC[i + 3*(j-1)]            for i ∈ 1:3, j ∈ 1:3]
     V = [component(vecV, i + 3*(j-1)) for i ∈ 1:3, j ∈ 1:3]
     #
-    coefficients(DF) .= 0 # port: broadcasting on a LinearOperator is no longer supported
+    coefficients(DF) .= 0
     #
     k1 = kron(I[1:3,1:3], J)
     k2 = kron(I[1:3,1:3], V)

@@ -1,10 +1,7 @@
-# Checks ADDED for the proof package; not part of the original code.
-# (Ported to IntervalArithmetic 1.0: interval/issubset_interval/in_interval/…)
-#
-# The original code takes the hypotheses below for granted (they are
-# established in the paper, Sections 3–4 and Appendix B). They are checked here
-# so that "all conditions hold ⇒ theorem" can be read off the checker output.
-# None of them changes the arithmetic of the original conditions.
+# Checks of the hypotheses the proof takes from the paper (Sections 3–4 and
+# Appendix B): the constants, the symmetry x̄ = S(x̄), the enclosures of the
+# parameters, the equilibrium c and the eigen-data (Λ, Γ), and Proposition 2.2
+# with a ψ̂ including |c| and |Γ| (conditions k.0a–0c and k.1d of statement.md).
 
 _full_(x) = _full(x)
 _isequal(a::Complex{<:Interval}, b::Complex{<:Interval}) = isequal_interval(real(a), real(b)) && isequal_interval(imag(a), imag(b))
@@ -105,7 +102,7 @@ function check_equilibrium(eq::FitzHughNagumo, data)
     # = -(υ - 1/2)(υ² + υ/2 - 3/10)  (for these parameter values)
     c_star_big = setprecision(() -> -(_Ib(5) + sqrt(_Ib(145))) / _Ib(20), BigFloat, 256)
     ok_c = all(cᵢ -> _contains(cᵢ, c_star_big), c)
-    c_star = interval(Float64, c_star_big) # binary64 enclosure for the eigenproblem below (port: rounded outward from the BigFloat one, as IntervalArithmetic 1.0 gives a 1-ulp wider binary64 enclosure)
+    c_star = interval(Float64, c_star_big) # binary64 enclosure for the eigenproblem below
     # eigenpairs of -DN(c) by the Newton–Kantorovich argument of Appendix B
     M = [inv(ϵ^2)*(1 - 3c_star^2)  -β₂/ϵ  -β₃/ϵ ;
          interval(1.0)              interval(-1.0)  interval(0.0) ;
@@ -127,9 +124,7 @@ end
 # Newton–Kantorovich for F_eig(λ, g) = (g₁ - 1, M g + λ² g) (Appendix B), in the
 # max norm on ℝ × ℝ³. A_eig = inv(mid(DF_eig(x̄))) is a floating-point auxiliary.
 function _eig_nk(M, λ̄::Float64, ḡ::Vector{Float64}, ϱe::Float64)
-    # port: products written as explicit sums (the generic matrix product of
-    # IntervalArithmetic 0.20 used by the faithful version), not the `:fast`
-    # BLAS-based product of IntervalArithmetic 1.0, which is wider on 4×4 data
+    # products as explicit sums: tighter than the BLAS-based interval product on these 4×4 matrices
     mv(A, x) = [sum(A[i,k] * x[k] for k ∈ axes(A, 2)) for i ∈ axes(A, 1)]
     mm(A, B) = [sum(A[i,k] * B[k,j] for k ∈ axes(A, 2)) for i ∈ axes(A, 1), j ∈ axes(B, 2)]
     F_eig(λ, g) = [g[1] - 1; mv(M, g) + λ^2*g]

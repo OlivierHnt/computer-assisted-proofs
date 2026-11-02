@@ -1,5 +1,5 @@
-# Reader of the frozen inputs (replaces the JLD2 files of the original
-# repository). One file per case, little-endian IEEE binary64, no header:
+# Reader of the frozen inputs, written by search/convert_jld2.jl. One file per
+# case, little-endian IEEE binary64, no header:
 #
 #   1. scalars        l, r_star, L, ℒ_x, ℒ_y, ν, ϱ                      7 × binary64
 #   2. equation       the interval parameters of the equation, in the
@@ -35,8 +35,6 @@ function expected_filesize(case)
     n = 7 + 2_nparams(case) + 2q + 2s*q + 2s*q^2 + s*dimension(_x_space(case))
     return 8n
 end
-
-# (The files are written by search/convert_jld2.jl from the original JLD2 fields.)
 
 _read_f64(io) = ltoh(read(io, Float64))
 _read_interval(io, ::Val{false}) = (a = _read_f64(io); b = _read_f64(io); interval(a, b))

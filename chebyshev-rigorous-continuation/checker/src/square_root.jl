@@ -2,9 +2,8 @@ module SquareRoot
 
 # Square root example (paper, Section 3.1.2): F(x, λ) = x² - λ, pseudo-arclength
 # continuation over λ ∈ [0, 1], lifted to (ℓ¹)² (weights ω ≡ 1).
-# Code copied from square_root.jl of OlivierHnt/ChebyshevContinuation.jl; only
-# the Newton continuation (Step 2) is removed: its outputs u_grid (points) and
-# u̇_grid (tangents) are inputs.
+# From square_root.jl of OlivierHnt/ChebyshevContinuation.jl, Step 2 (Newton
+# continuation) removed: its outputs u_grid (points) and u̇_grid (tangents) are inputs.
 
 using RadiiPolynomial, LinearAlgebra
 

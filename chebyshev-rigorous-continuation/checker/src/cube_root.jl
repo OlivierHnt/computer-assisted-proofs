@@ -1,9 +1,9 @@
 module CubeRoot
 
-# Cubic root example (paper, Section 2.2.3): F(x, λ) = x³ - λ - 2 on λ ∈ [-1, 1],
+# Cube root example (paper, Section 2.2.3): F(x, λ) = x³ - λ - 2 on λ ∈ [-1, 1],
 # lifted to ℓ¹ (weights ω ≡ 1) in the Chebyshev variable.
-# Code copied from cube_root.jl of OlivierHnt/ChebyshevContinuation.jl; only
-# the Newton continuation (Step 2) is removed: its output x_grid is an input.
+# From cube_root.jl of OlivierHnt/ChebyshevContinuation.jl, Step 2 (Newton
+# continuation) removed: its output x_grid is an input.
 
 using RadiiPolynomial
 
@@ -65,7 +65,7 @@ function cube_root_certificate(x_grid::Vector{Float64})
 
     #- Z₂ bound
 
-    r_star = 1e-6 # 10sup(Y)
+    r_star = 1e-6
 
     Z₂ = exact(6) * norm(A_cheb, 1) * (norm(x_cheb, 1) + exact(r_star))
 

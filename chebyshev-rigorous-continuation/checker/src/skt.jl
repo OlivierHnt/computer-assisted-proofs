@@ -2,15 +2,10 @@ module SKT
 
 # Pseudo-arclength continuation of steady states of the Shigesada–Kawasaki–Teramoto
 # system (paper, Section 4.2), bifurcation parameter λ = d₁ = d₂, fourteen arcs.
-# Adapted from skt.jl of OlivierHnt/ChebyshevContinuation.jl. The Newton
-# continuation (Step 2) is removed: its outputs u_grid (points) and u̇_grid
-# (tangents) are inputs. The approximate inverses (A_finite, W) are recomputed
-# here in floating point from those inputs, exactly as in the original script.
-# The bounds are the ones derived in statement.md from Theorem 2.11 and Section
-# 4.2; they differ from the original script in two places, marked "revision":
-#   (a) the ℓ¹ norms weigh every nonzero Chebyshev index by 2 (sum over n ∈ Z);
-#   (d) Z₂ uses the operator norm of 𝒜 Π_{≤K_A} diag(Δ, 0), as the paper's bound
-#       requires, instead of that of 𝒜 Π_{≤K_A}.
+# The approximate inverses (A_finite, W) are recomputed here in binary64 from the
+# inputs. The bounds are those of statement.md (Section 4.2).
+# From skt.jl of OlivierHnt/ChebyshevContinuation.jl, Step 2 (Newton continuation)
+# removed: its outputs u_grid (points) and u̇_grid (tangents) are inputs.
 
 using RadiiPolynomial, LinearAlgebra
 
@@ -88,11 +83,7 @@ arclength_of(name) = Dict("u_bar1a" => 0.38, "u_bar1b" => 0.19, "u_bar1c" => 0.2
                           "u_bar3a" => 0.20, "u_bar3b" => 0.10, "u_bar3c" => 0.10, "u_bar3d" => 0.52,
                           "u_bar4a" => 0.20, "u_bar4b" => 0.20, "u_bar4c" => 0.40)[name]
 
-# Chebyshev order per arc. The paper (Table 1) uses 20 and 16 for u_bar2c and u_bar3c;
-# with the paper's norm these two arcs fail at those orders, so their inputs were
-# regenerated at 24 and 20 (see statement.md, Result 4). u_bar3d fails at the paper's
-# order 24 and still at 28 and 36 (Z₁ is dominated by its tail term, independent of
-# N), so its input is the original one.
+# Chebyshev order per arc (statement.md, Result 4)
 arc_N(name) = Dict("u_bar1a" => 16, "u_bar1b" => 16, "u_bar1c" => 24,
                    "u_bar2a" => 16, "u_bar2b" => 16, "u_bar2c" => 24, "u_bar2d" => 24,
                    "u_bar3a" => 16, "u_bar3b" => 16, "u_bar3c" => 20, "u_bar3d" => 24,
@@ -105,24 +96,22 @@ direction_of(name) = Dict("u_bar1a" => -1.0, "u_bar1b" => -1.0, "u_bar1c" => -1.
 
 const K = 80
 
-# Truncation order of the approximate inverse, chosen independently from K: 165 as in
-# the paper, except for u_bar3d, whose Z₁ tail term ‖𝓜(W)‖‖𝓜(DR)‖/(π(K_A+1))² exceeds
-# 0.97 at K_A = 165 whatever the Chebyshev order N (revision: K_A = 250 for that arc).
+# Truncation order of the approximate inverse, independent of K. u_bar3d needs the
+# larger value: its Z₁ tail term ‖𝓜(W)‖‖𝓜(DR)‖/(π(K_A+1))² is too close to 1 at 165,
+# whatever the Chebyshev order N.
 arc_K_A(name) = name == "u_bar3d" ? 250 : 165
 
 X_u() = evensym(Fourier(K, π)) × evensym(Fourier(K, π)) × ScalarSpace() # space of u = (v₁, v₂, λ)
 
 # ℓ¹ norms (paper, Section 4.2) with ω ≡ 1 and χ ≡ 1: 𝒮_pa = ℓ¹_ω(ℓ¹_χ(R)) × ℓ¹_ω(ℓ¹_χ(R)) × ℓ¹_ω(R)
 # with the sum of the component norms; the sums over n ∈ Z and k ∈ Z give weight 2 to
-# every nonzero Chebyshev or cosine index. (revision (a): one `IdentityWeight()` per
-# factor; the single-weight `Ell1()` of RadiiPolynomial 0.11 gives weight 1 to the
-# Chebyshev indices of a tensor space.)
+# every nonzero Chebyshev or cosine index (one `IdentityWeight()` per factor)
 
 const X_cheb_cos = Ell1(IdentityWeight(), IdentityWeight()) # ℓ¹_ω(ℓ¹_χ(R)): (Chebyshev ⊗ cosine)_sym
 const X_cheb     = Ell1(IdentityWeight())                   # ℓ¹_ω(R): Chebyshev
 const X_pa       = NormedCartesianSpace((X_cheb_cos, X_cheb_cos, X_cheb), Ell1()) # 𝒮_pa
 
-# utilitary
+# utilities
 
 struct PseudoInverseLaplacian <: AbstractDiagonalOperator end
 RadiiPolynomial.getcoefficient(::PseudoInverseLaplacian, (codom, i)::Tuple{SymmetricSpace{<:Fourier},Integer}, (dom, j)::Tuple{SymmetricSpace{<:Fourier},Integer}) =
@@ -279,7 +268,7 @@ function skt_certificate(name, u_grid::Vector{Sequence}, u̇_grid::Vector{Sequen
     opnormA = max(opnorm_A_trunc, opnormW / (interval(π) * interval(K_A + 1))^2)
 
     # ‖𝒜 diag(Δ, 0)‖ ≤ max(‖𝒜 Π_{≤K_A} diag(Δ, 0)‖, ‖𝓜(W)‖): the columns > K_A of A(s) diag(Δ, 0)
-    # are W(s)Δ₀⁻¹Π_{>K_A}Δ = W(s)Π_{>K_A} (revision (d): the original script used ‖𝒜 Π_{≤K_A}‖ here)
+    # are W(s)Δ₀⁻¹Π_{>K_A}Δ = W(s)Π_{>K_A}
     AΔ_grid_rig = A_grid_rig .*
                 Ref([[Δ exact(0)*I ; exact(0)*I Δ]    zero_col
                      zero_row                         zero_corner]);
@@ -287,9 +276,8 @@ function skt_certificate(name, u_grid::Vector{Sequence}, u̇_grid::Vector{Sequen
     opnorm_AΔ_trunc = opnorm(AΔ_cheb_trunc, X_pa)
     opnormAΔ = max(opnorm_AΔ_trunc, opnormW)
 
-    # Z₂ = ‖𝒜 diag(Δ, 0)‖ C₁ + ‖𝒜‖ C₂ with ‖D²_u (ΔΦ, R)‖: for w, h ∈ 𝒮_pa of unit norm, the
-    # bilinear forms D²Φ[w, h] and D²R[w, h] (Φ is quadratic in (v, λ) jointly, R in v) are
-    # bounded by the largest coefficient of the pairings (w_i, h_j), see statement.md:
+    # Z₂ = ‖𝒜 diag(Δ, 0)‖ C₁ + ‖𝒜‖ C₂: for w, h ∈ 𝒮_pa of unit norm, D²Φ[w, h] and D²R[w, h]
+    # are bounded by the largest coefficient of the pairings (w_i, h_j), see statement.md:
     #   C₁ = max(2|d₁₁|, |d₁₂| + |d₂₁|, 2|d₂₂|, 1)   (the 1 is the cross term λ·v of Φ),
     #   C₂ = max(2|a₁|, |b₁| + |b₂|, 2|a₂|).
     C₁ = interval(max(2*d₁₁, d₁₂ + d₂₁, 2d₂₂, 1))

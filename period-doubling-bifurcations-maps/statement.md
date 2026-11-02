@@ -18,8 +18,7 @@ $\bar X$ stored in `data/X_bar.bin`.
 Reference: O. Hénot, J.-P. Lessard, *Rigorous verification of period-doubling
 bifurcations in maps*, arXiv:2610.22986 (2026), Theorem 6.1. Section, theorem,
 lemma and equation numbers below refer to the arXiv version of that paper,
-which defines every object named here. The paper has a single application
-(Section 6); this package covers all of it.
+which defines every object named here.
 
 ## Setting
 
@@ -38,30 +37,24 @@ which defines every object named here. The paper has a single application
   so $f_\lambda = f/\lambda$, $A_\lambda = A/\lambda$, $B_\lambda = B/\lambda$.
 - The period-doubling map $F_{\mathrm{pd}}$ of Definition 3.1, (3.1) (code: `F`) and
   its Jacobian at any $X$ (code: `DF`, which reduces to (4.1) at a zero). Code:
-  `checker/src/kot_schaffer_map.jl`, verbatim from the original script.
+  `checker/src/kot_schaffer_map.jl`.
 - Constants: $r_\star = 10^{-8}$ (radius of the ball on which $Z$ is computed).
-- Arithmetic: IEEE binary64 interval arithmetic with outward rounding,
-  IntervalArithmetic.jl 1.0.12 (default configuration: correctly rounded
-  operations, interval matrix products by Rump's midpoint–radius algorithm) via
-  RadiiPolynomial.jl 0.11.13, on Julia 1.13.3. Only $+,-,\times,\div,|\cdot|$ are used.
-  Interval matrix inverses are IntervalArithmetic's `inv(::Matrix{<:Interval})`,
-  a Neumann-series enclosure that returns NaI (and makes the conditions fail) if
-  it cannot certify invertibility.
+- Arithmetic: outward-rounded binary64 intervals (RadiiPolynomial.jl on IntervalArithmetic.jl, versions pinned in `checker/Manifest.toml`); interval matrix inverses by
+  IntervalArithmetic's `inv`, which returns NaI (a failing condition) when it
+  cannot certify invertibility.
 
 ## Inputs (in `data/`)
 
 - Frozen: `X_bar.bin`: the numerical approximation $\bar X = (\bar x, \bar v, \bar\lambda, \bar w, \bar\mu, \bar h)$
   of a zero of $F_{\mathrm{pd}}$, obtained by Newton's method in floating point
-  (`julia --project=search search/find_candidate.jl`, the `produce` command of
-  `entry.json`, which is the original script's search and reproduces this file
-  bit-exactly; it is not part of the proof). Byte layout: 42 IEEE binary64,
-  little-endian, no header, in the order
+  (the `produce` command of `entry.json`, `julia --project=search search/find_candidate.jl`;
+  not part of the proof). Byte layout: 42 IEEE binary64, little-endian, no header,
+  in the order
   $\bar x_0..\bar x_9$, $\bar v_0..\bar v_9$, $\bar\lambda$, $\bar w_0..\bar w_9$, $\bar\mu$, $\bar h_0..\bar h_9$
   (336 bytes). SHA-256 in `data/hashes.json`; the checker verifies it before
   reading the file. The model constants $\beta$, $\kappa$ are written in the checker
   ($\beta_k = 2^{-k}$ exactly; $\kappa_0, \kappa_1$ as the tight enclosures `I"0.8"`, `I"-0.2"`).
-- Recomputed by the checker (auxiliary, floating point, as in the original
-  script):
+- Recomputed by the checker (auxiliary, floating point):
   - $Q$ = `inv(DF(X̄))` in binary64 (LAPACK), the approximate inverse of
     Theorem 5.1, then used as a thin interval matrix. Theorem 5.1 holds for any $Q$.
   - $V$ = `eigvecs(mid(A_r))`, approximate eigenvectors of the midpoint of the
@@ -69,8 +62,8 @@ which defines every object named here. The paper has a single application
     holds for any invertible $V$; invertibility is certified by the interval
     inverse $\mathcal W \ni V^{-1}$.
 
-  The conditions do not depend on their exact values; only the printed bounds
-  do (a different LAPACK could change the last digits).
+  The conditions do not depend on the exact values of $Q$ and $V$; only the
+  printed enclosures do.
 
 ## Conditions to verify
 
