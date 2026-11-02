@@ -1,0 +1,11 @@
+{
+  "mg_lambda.bin": {
+    "sha256": "e7d5b48186d1e2febd30ea9ae2c0d8c96e448c2cb7edaf745dd730773e293689"
+  },
+  "seir_lambda.bin": {
+    "sha256": "68c27aef9f631d99e61a995a04031fa9d7f70ecde50a04e1277d3bac22b83e27"
+  },
+  "vdp_lambda.bin": {
+    "sha256": "b5d7d13d0d4ec322831254ed59787c048be1e73f54c46566b15b8282e3d3be5a"
+  }
+}

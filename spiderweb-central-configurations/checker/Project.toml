@@ -1,0 +1,10 @@
+[deps]
+RadiiPolynomial = "f2081a94-c849-46b6-8dc9-07bb90ed72a9"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+SHA = "ea8e919c-243c-51af-8825-aaa63cd721ce"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+
+[compat]
+RadiiPolynomial = "0.11.13"
+JSON = "1.12.2"
+julia = "1.13"

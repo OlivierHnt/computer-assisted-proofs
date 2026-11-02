@@ -1,0 +1,21 @@
+{
+  "title": "Period-doubling bifurcation in the Kot-Schaffer model",
+  "authors": [
+    "Olivier Hénot",
+    "Jean-Philippe Lessard"
+  ],
+  "run": "julia --project=checker checker/verify.jl",
+  "paper": "arXiv:2610.22986",
+  "keywords": [
+    "period-doubling bifurcation",
+    "flip bifurcation",
+    "discrete dynamical systems",
+    "Kot-Schaffer model",
+    "integro-difference equations",
+    "normal form",
+    "Newton-Kantorovich theorem",
+    "Gershgorin disks",
+    "interval arithmetic"
+  ],
+  "produce": "julia --project=search search/find_candidate.jl"
+}

@@ -1,0 +1,20 @@
+{
+  "P_bar.bin": {
+    "sha256": "ccbe3361e8dcfc375262aa690dc0872267015eb0e90c38302fd72119df7b9c99"
+  },
+  "Q_bar.bin": {
+    "sha256": "569bb74667f67bf752f1cb6da59aaf7aa53984f336de2fc966fbeb4a31dc51ce"
+  },
+  "c1_bar.bin": {
+    "sha256": "7d18cd8739708e3aae5c0a5b6be2742eed1daf9d057ed318b523199a450eb798"
+  },
+  "eig_c0.bin": {
+    "sha256": "8cc642dca866d9037b878ee37ac90d720a4a628d2b4c847da9faa377ec37549f"
+  },
+  "eig_c1.bin": {
+    "sha256": "96ed42ce78984caa51a9720fca3cbec4fc675a4b6eb27c574edfdc6a2230bb3f"
+  },
+  "x_bar.bin": {
+    "sha256": "1b704c21bad17da9cb09cc566a5a319df50bb7e846953f3542daacad965ad84a"
+  }
+}

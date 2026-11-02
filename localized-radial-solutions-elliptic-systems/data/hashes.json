@@ -1,0 +1,14 @@
+{
+  "fitzhugh_nagumo.bin": {
+    "sha256": "55d304ccfb62bc4fda045433eb0b7375937ebdf560edd9ce73ffc4e58675e9aa"
+  },
+  "klein_gordon_m_0.bin": {
+    "sha256": "67f1c3f44f0b3d8be6e8e5910fca14e502013b10428ab00a044c256a2b54a9b9"
+  },
+  "klein_gordon_m_1.bin": {
+    "sha256": "2fe7f374c83154421da22f39e6ef5f8c4d9858114eb621b2ecb33c575686c16f"
+  },
+  "swift_hohenberg.bin": {
+    "sha256": "bac4a239534183acbb11215b154f8a01b37acc1d52447a1927e4b14ed8e7f768"
+  }
+}

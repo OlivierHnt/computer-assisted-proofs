@@ -1,0 +1,23 @@
+{
+  "title": "Localized radial solutions of the Klein-Gordon, Swift-Hohenberg and FitzHugh-Nagumo equations",
+  "authors": [
+    "Jan Bouwe van den Berg",
+    "Olivier Hénot",
+    "Jean-Philippe Lessard"
+  ],
+  "run": "julia --project=checker checker/verify.jl",
+  "paper": "Nonlinearity 36 (2023) 6476, doi:10.1088/1361-6544/ad0278; arXiv:2211.16445",
+  "keywords": [
+    "semilinear elliptic systems",
+    "localized radial solutions",
+    "Klein-Gordon equation",
+    "Swift-Hohenberg equation",
+    "FitzHugh-Nagumo system",
+    "center-stable manifold",
+    "Lyapunov-Perron operator",
+    "Newton-Kantorovich",
+    "radii polynomial",
+    "Taylor-Chebyshev series"
+  ],
+  "produce": "julia --project=search search/convert_jld2.jl"
+}

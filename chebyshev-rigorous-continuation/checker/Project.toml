@@ -1,0 +1,15 @@
+name = "ChebyshevContinuationChecker"
+authors = ["Olivier Hénot"]
+version = "2.0.0"
+
+[deps]
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+RadiiPolynomial = "f2081a94-c849-46b6-8dc9-07bb90ed72a9"
+SHA = "ea8e919c-243c-51af-8825-aaa63cd721ce"
+
+[compat]
+JSON = "1.12.2"
+LinearAlgebra = "1.13"
+RadiiPolynomial = "0.11.13"
+julia = "1.13"

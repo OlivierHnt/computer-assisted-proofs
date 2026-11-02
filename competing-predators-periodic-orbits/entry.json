@@ -1,0 +1,23 @@
+{
+  "title": "Global family of stable periodic orbits for two competing predators (Butler-Waltman stable connection problem)",
+  "authors": [
+    "Kevin E. M. Church",
+    "Jia-Yuan Dai",
+    "Olivier Hénot",
+    "Phillipo Lappicy",
+    "Nicola Vassena"
+  ],
+  "run": "julia --project=checker checker/verify.jl",
+  "paper": "arXiv:2504.03058",
+  "keywords": [
+    "predator-prey systems",
+    "periodic orbits",
+    "stability",
+    "Floquet theory",
+    "transcritical bifurcation",
+    "global continuation",
+    "Newton-Kantorovich theorem",
+    "Chebyshev-Fourier series"
+  ],
+  "produce": "julia --project=search search/produce.jl"
+}

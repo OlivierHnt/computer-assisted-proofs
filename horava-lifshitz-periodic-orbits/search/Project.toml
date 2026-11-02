@@ -1,0 +1,13 @@
+name = "HLCertificateSearch"
+authors = ["Kevin E. M. Church", "Olivier Hénot"]
+version = "2.0.0"
+
+[deps]
+IntervalArithmetic = "d1acc4aa-44c8-5952-acd4-ba5d80a2a253"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+RadiiPolynomial = "f2081a94-c849-46b6-8dc9-07bb90ed72a9"
+
+[compat]
+IntervalArithmetic = "1.0.12"
+RadiiPolynomial = "0.11.13"
+julia = "1.13"

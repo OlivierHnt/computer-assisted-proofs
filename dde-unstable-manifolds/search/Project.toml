@@ -1,0 +1,6 @@
+name = "DDEUnstableManifoldsSearch"
+authors = ["Olivier Hénot", "Jean-Philippe Lessard", "Jason D. Mireles James"]
+version = "3.0.0"
+
+[compat]
+julia = "1.13"
