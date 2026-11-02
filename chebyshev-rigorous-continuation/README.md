@@ -19,17 +19,21 @@ join. The arc `u_bar3d` needs a larger approximate inverse ($K_A = 250$ instead
 of 165). All conditions pass. `statement.md` states exactly which results hold
 and lists the errata of the paper.
 
-Check the proofs (Julia 1.13, as pinned in `checker/Manifest.toml`):
+Check the proofs (Julia 1.13, as pinned in `checker/Manifest.toml`). The
+checker takes the examples to check, one or several of `cube_root`,
+`square_root`, `cahn_hilliard`, `skt` (the `cases` of `entry.json`), and exits
+0 iff every condition of those examples holds; without argument it checks all
+four:
 
 ```
-julia --project=checker checker/verify.jl
+julia --project=checker checker/verify.jl cahn_hilliard   # Result 3, about 5 minutes
+julia --project=checker checker/verify.jl                 # the four results, about one hour (2 BLAS threads)
 ```
 
-The full run takes about one hour (2 BLAS threads); almost all of it is the
-SKT example. (The last revision was re-checked in parts rather than in one
-end-to-end run.) `julia --project=checker checker/verify.jl cahn_hilliard` (or any
-subset of `cube_root`, `square_root`, `cahn_hilliard`, `skt`) runs part of it
-(exit code 3: not the proof).
+Almost all of the full run is the SKT example. (The last revision was
+re-checked in parts rather than in one end-to-end run.) The four results are
+independent: `entry.json` declares them as `cases`, with `cahn_hilliard` as the
+`test_case` that an automated check runs.
 
 Regenerate the inputs (optional, not part of the proof):
 

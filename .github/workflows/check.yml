@@ -11,12 +11,12 @@ name: Check proofs
 #             PRs test the new versions), monthly, and by hand. On a scheduled
 #             failure it opens an issue. An alarm, not a promise.
 #
-# A package whose entry.json declares `cases` is checked on ONE representative
-# case (the first value of each placeholder): the checker takes one case per
-# invocation, and the theorem, the conjunction over all cases, is the authors'
-# run recorded in statement.md. The whole Cartesian product is run only by
-# hand (workflow_dispatch with all_cases = true); for some packages it takes
-# days of CPU.
+# A package whose entry.json declares `cases` is checked on ONE test case: the
+# value of `test_case` if the entry declares it, otherwise the first value of
+# each placeholder. The checker takes one case per invocation, and the theorem,
+# the conjunction over all cases, is the authors' run recorded in statement.md.
+# The whole Cartesian product is run only by hand (workflow_dispatch with
+# all_cases = true); for some packages it takes days of CPU.
 #
 # Frozen inputs listed in data/hashes.json with a "url" and absent from the
 # checkout are downloaded and their SHA-256 verified before the checker runs.
@@ -120,16 +120,17 @@ jobs:
             julia --project=checker -e 'using Pkg; Pkg.instantiate(); Pkg.status()'
           fi
 
-      - name: Run the checker (one representative case, or every case on request)
+      - name: Run the checker (the test case, or every case on request)
         env:
           ALL_CASES: ${{ github.event_name == 'workflow_dispatch' && inputs.all_cases && 'true' || 'false' }}
         run: |
           # The placeholders {name} of `run` take their values from `cases`: an
           # array enumerates values, a string "a:b" / "a:step:b" is an integer
-          # range, any other value is a single value. By default only the first
-          # value of each placeholder is run (one representative case); with
-          # ALL_CASES=true the whole Cartesian product is. Without `cases`,
-          # `run` is executed once. Every run must exit 0.
+          # range, any other value is a single value. By default one test case
+          # is run: `test_case` of entry.json (one value per placeholder, which
+          # must be among the declared values), or else the first value of each
+          # placeholder; with ALL_CASES=true the whole Cartesian product is.
+          # Without `cases`, `run` is executed once. Every run must exit 0.
           python3 - <<'PY' > cmds.txt
           import itertools, json, os, re
           e = json.load(open("entry.json"))
@@ -145,12 +146,19 @@ jobs:
                   return range(p[0], p[-1] + 1, p[1] if len(p) == 3 else 1)
               return [v]
           every = os.environ.get("ALL_CASES") == "true"
-          for combo in itertools.product(*((values(cases[n]) if every else [values(cases[n])[0]]) for n in names)):
+          test = e.get("test_case", {})
+          assert not test or set(test) == set(names), f"test_case {list(test)} vs placeholders {names}"
+          for n in test:
+              assert str(test[n]) in map(str, values(cases[n])), f"test_case {n} = {test[n]} is not among the declared cases"
+          def selected(n):
+              v = values(cases[n])
+              return v if every else [test[n]] if test else [v[0]]
+          for combo in itertools.product(*(selected(n) for n in names)):
               print(run.format(**dict(zip(names, map(str, combo)))))
           PY
           [ -s cmds.txt ] || { echo "no run command in entry.json"; exit 1; }
           if [ -n "$(python3 -c 'import json; print(json.load(open("entry.json")).get("cases", ""))')" ] && [ "$ALL_CASES" != "true" ]; then
-            echo "representative case only (the theorem needs every case, see statement.md)"
+            echo "test case only (the theorem needs every case, see statement.md)"
           fi
           echo "$(wc -l < cmds.txt) run(s)"
           while IFS= read -r cmd; do

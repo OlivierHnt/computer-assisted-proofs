@@ -12,14 +12,15 @@
 # in the original code) and the 4×4 A_eig of Appendix B.
 #
 # Usage (from the package root):
-#   julia --project=checker checker/verify.jl              all four cases (the proof)
-#   julia --project=checker checker/verify.jl kg0 sh       only some cases (partial run)
+#   julia --project=checker checker/verify.jl <case>...    one or several of
+#                        kg0, kg1, sh, fhn (the `cases` of entry.json); none
+#                        means all four
 # Case names: kg0 (Klein–Gordon m = 0), kg1 (Klein–Gordon m = 1),
 # sh (Swift–Hohenberg), fhn (FitzHugh–Nagumo). kg1 and fhn need a large server
 # (see README.md).
-# Prints each condition, in the order of statement.md, prefixed pass or fail.
-# Exit code 0 iff every condition of a full run holds; 1 if one fails; 3 for a
-# partial run in which every evaluated condition holds.
+# Prints each condition of the cases run, in the order of statement.md,
+# prefixed pass or fail. Exit code 0 iff every one of them holds. The cases are
+# independent; the theorems need all four.
 
 import Pkg
 Pkg.instantiate()
@@ -96,7 +97,6 @@ META = Dict(
 
 selected = isempty(ARGS) ? [META[c.name].short for c ∈ CASES] : ARGS
 all(s -> s ∈ [m.short for m ∈ values(META)], selected) || error("unknown case in $ARGS; use kg0, kg1, sh, fhn")
-partial = Set(selected) != Set(m.short for m ∈ values(META))
 
 _full(x) = EllipticPDELocalizedRadialSol._full(x)
 
@@ -137,11 +137,6 @@ end
 
 all_pass = all(verdicts)
 println()
-if partial
-    println(all_pass ? "ALL $(length(verdicts)) EVALUATED CONDITIONS PASS (PARTIAL RUN: $(join(selected, ", ")); the theorems need all four cases)" :
-                       "$(count(!, verdicts)) OF $(length(verdicts)) CONDITIONS FAILED (PARTIAL RUN)")
-    exit(all_pass ? 3 : 1)
-else
-    println(all_pass ? "ALL $(length(verdicts)) CONDITIONS PASS" : "$(count(!, verdicts)) OF $(length(verdicts)) CONDITIONS FAILED")
-    exit(all_pass ? 0 : 1)
-end
+println(all_pass ? "ALL $(length(verdicts)) CONDITIONS PASS" : "$(count(!, verdicts)) OF $(length(verdicts)) CONDITIONS FAILED")
+println("cases run: ", join(selected, ", "), " (the theorems need every case of `cases` in entry.json)")
+exit(all_pass ? 0 : 1) # 0 iff every condition of the cases run holds

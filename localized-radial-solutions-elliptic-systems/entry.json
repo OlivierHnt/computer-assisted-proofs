@@ -5,7 +5,18 @@
     "Olivier Hénot",
     "Jean-Philippe Lessard"
   ],
-  "run": "julia --project=checker checker/verify.jl",
+  "run": "julia --project=checker checker/verify.jl {case}",
+  "cases": {
+    "case": [
+      "kg0",
+      "kg1",
+      "sh",
+      "fhn"
+    ]
+  },
+  "test_case": {
+    "case": "kg0"
+  },
   "paper": "Nonlinearity 36 (2023) 6476, doi:10.1088/1361-6544/ad0278; arXiv:2211.16445",
   "keywords": [
     "semilinear elliptic systems",

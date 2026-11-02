@@ -11,13 +11,12 @@
 # conditions hold whatever their exact value).
 #
 # Usage (from the package root):
-#   julia --project=checker checker/verify.jl
-# Prints each condition, in the order of statement.md, prefixed pass or fail.
-# Exit code 0 iff every condition holds.
-#
-# For development only: `julia --project=checker checker/verify.jl skt` (or any
-# subset of cube_root, square_root, cahn_hilliard, skt) checks only those
-# examples; the proof is the full run.
+#   julia --project=checker checker/verify.jl <example>...   one or several of
+#                        cube_root, square_root, cahn_hilliard, skt (the `cases`
+#                        of entry.json); none means all four
+# Prints each condition of the examples run, in the order of statement.md,
+# prefixed pass or fail. Exit code 0 iff every one of them holds. The four
+# results are independent (one example each); all four are the proof.
 
 import Pkg
 Pkg.instantiate()
@@ -65,7 +64,9 @@ for f ∈ sort(collect(keys(hashes)))
 end
 println()
 
-examples = isempty(ARGS) ? ["cube_root", "square_root", "cahn_hilliard", "skt"] : ARGS
+EXAMPLES = ["cube_root", "square_root", "cahn_hilliard", "skt"] # the `cases` of entry.json
+examples = isempty(ARGS) ? EXAMPLES : ARGS
+all(x -> x ∈ EXAMPLES, examples) || error("unknown example in $ARGS; use ", join(EXAMPLES, ", "))
 t_start = time()
 
 # ------------------------------------------------------------------------
@@ -140,6 +141,6 @@ end
 all_pass = all(verdicts)
 println()
 println(all_pass ? "ALL $(length(verdicts)) CONDITIONS PASS" : "$(count(!, verdicts)) OF $(length(verdicts)) CONDITIONS FAILED")
-isempty(ARGS) || println("(partial run: only ", join(examples, ", "), ")")
+println("examples run: ", join(examples, ", "), " (the results need every example of `cases` in entry.json)")
 println("checker time: ", round(time() - t_start; digits = 1), " s")
-exit(all_pass ? (isempty(ARGS) ? 0 : 3) : 1) # 0: the proof; 1: a failed condition; 3: a partial run
+exit(all_pass ? 0 : 1) # 0 iff every condition of the examples run holds

@@ -7,20 +7,23 @@ Taylor–Chebyshev approximation. This package records the computer-assisted
 proof as statement + inputs + checker; see `statement.md` for the theorem and
 the conditions.
 
-Check the proof (Julia 1.13):
+Check the proof (Julia 1.13). The checker takes the cases to check, one or
+several of `kg0`, `kg1`, `sh`, `fhn` (the `cases` of `entry.json`: Klein–Gordon
+m = 0 and m = 1, Swift–Hohenberg, FitzHugh–Nagumo), and exits 0 iff every
+condition of those cases holds; without argument it checks all four:
 
 ```
-julia --project=checker checker/verify.jl
+julia --project=checker checker/verify.jl kg0 sh   # the two small cases
+julia --project=checker checker/verify.jl          # the four cases
 ```
 
-This runs the four cases. The Klein–Gordon m = 0 and Swift–Hohenberg
-cases take minutes on a laptop; the Klein–Gordon m = 1 and FitzHugh–Nagumo
+The Klein–Gordon m = 0 and Swift–Hohenberg cases take under a minute each
+(peak memory 1.9 GiB and 5.3 GiB); the Klein–Gordon m = 1 and FitzHugh–Nagumo
 cases build dense interval matrices of size about 45 900 × 47 100 and
 72 200 × 74 000 and need a large server (roughly 0.4 TB and 1 TB of memory,
 extrapolated; the paper reports under 2 h and under 6 h on 32 threads with the
-original versions). Single cases:
-`checker/verify.jl kg0 sh` (names `kg0`, `kg1`, `sh`, `fhn`; a partial run
-exits with code 3 when everything it evaluated passes).
+original versions). The theorems need all four cases; `entry.json` declares
+them as `cases`, with `kg0` as the `test_case` that an automated check runs.
 
 Interval matrix products are BLAS products under directed rounding
 (IntervalArithmetic's bundled OpenBLAS); `CHECKER_BLAS_THREADS=n` sets the

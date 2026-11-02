@@ -7,7 +7,10 @@ defines every object named here. The paper states the four results below in its
 "Results of the code" paragraphs (they are not numbered theorems): the cube root
 (Section 2.2.3) and the square root (Section 3.1.2) are pedagogical
 illustrations; the Cahn–Hilliard manifold (Section 4.1) and the SKT arcs
-(Section 4.2) are the applications.
+(Section 4.2) are the applications. The four results are independent:
+`entry.json` declares them as the `cases` `cube_root`, `square_root`,
+`cahn_hilliard`, `skt` of the checker (one result each), with `cahn_hilliard`
+as `test_case`; each result is proved by the run of its case.
 
 This revision of the package corrects the bounds of Sections 4.1 and 4.2 as
 computed by the original code (see "Revisions and paper errata" at the end).

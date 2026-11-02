@@ -4,7 +4,18 @@
     "Maxime Breden",
     "Olivier Hénot"
   ],
-  "run": "julia --project=checker checker/verify.jl",
+  "run": "julia --project=checker checker/verify.jl {example}",
+  "cases": {
+    "example": [
+      "cube_root",
+      "square_root",
+      "cahn_hilliard",
+      "skt"
+    ]
+  },
+  "test_case": {
+    "example": "cahn_hilliard"
+  },
   "paper": "arXiv:2609.22689",
   "keywords": [
     "rigorous continuation",

@@ -24,6 +24,11 @@
 "Localized radial" means $U(x) = u(|x|)$ with $u(r) \to c$, $u'(r) \to 0$ as
 $r \to \infty$, $c$ a hyperbolic zero of $\mathbf{N}$ (Section 1).
 
+The four solutions are independent cases of the checker, declared as the
+`cases` `kg0`, `kg1` (the two Klein–Gordon solutions, Theorem 1.1), `sh`
+(Theorem 1.2) and `fhn` (Theorem 1.3) of `entry.json`, with `kg0` as
+`test_case`; each theorem is proved by the run of its case(s).
+
 Reference: J. B. van den Berg, O. Hénot, J.-P. Lessard, *Constructive proofs
 for localised radial solutions of semilinear elliptic systems on
 $\mathbb{R}^d$*, Nonlinearity 36 (2023) 6476, doi:10.1088/1361-6544/ad0278;
