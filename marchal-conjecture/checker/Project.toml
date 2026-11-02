@@ -11,4 +11,5 @@ JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 [compat]
 RadiiPolynomial = "0.11.13"
 JSON = "1.12.2"
+SHA = "0.7, 1"
 julia = "1.13"
