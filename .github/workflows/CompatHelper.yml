@@ -3,6 +3,8 @@ name: CompatHelper
 # Opens a pull request whenever a dependency of a checker releases a version
 # outside its [compat] bounds, through the reusable workflow of
 # capsule-math/index (see it for the COMPATHELPER_PRIV secret).
+# Requires ticking Settings > Actions > General > Workflow permissions >
+# "Allow GitHub Actions to create and approve pull requests" in this repository.
 
 on:
   schedule:
